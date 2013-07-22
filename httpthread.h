@@ -16,7 +16,8 @@ private:
     int socketDescriptor;
     QString docRoot;
     QString read(QTcpSocket *socket);
-    QStringList parseRequest(QString request);
+    QHash<QString, QStringList> parseRequest(QString request);
+    QString processRequestData(QHash<QString, QStringList> requestData);
 
 signals:
     void error(QAbstractSocket::SocketError socketError);
