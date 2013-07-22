@@ -21,11 +21,14 @@ void HTTPThread::run()
     QString request = read(&socket);
     qDebug() << request;
 
-    parseRequest(request);
+    QByteArray response = processRequestData(parseRequest(request)).toUtf8();
 
-    //TODO: process the data
-    //TODO: create the response
-    //TODO: send the response
+    socket.write(response, response.size());
+
+    if(!socket.waitForBytesWritten()){
+        qDebug() << "Could not write byts to socket: " << socket.errorString();
+        emit error(socket.error());
+    }
 
     socket.close();
 }
