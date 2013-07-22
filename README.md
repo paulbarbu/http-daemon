@@ -1,6 +1,7 @@
 HTTP Daemon
 ===========
-Simple HTTP daemon created for learning purposes using Qt and C++
+Simple HTTP daemon created for learning purposes using Qt and C++.
+
 By no means a production ready or a fully RFC-compilant daemon.
 
 License
