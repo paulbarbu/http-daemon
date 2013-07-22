@@ -2,10 +2,9 @@
 
 #include "httpthread.h"
 
-HTTPThread::HTTPThread(int socketDescriptor, QObject *parent) :
-    QThread(parent), socketDescriptor(socketDescriptor)
+HTTPThread::HTTPThread(int socketDescriptor, QString docRoot, QObject *parent) :
+    QThread(parent), socketDescriptor(socketDescriptor), docRoot(docRoot)
 {
-
 }
 
 void HTTPThread::run()

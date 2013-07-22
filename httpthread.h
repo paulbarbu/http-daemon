@@ -9,11 +9,12 @@ class HTTPThread : public QThread
 {
     Q_OBJECT
 public:
-    explicit HTTPThread(int socketDescriptor, QObject *parent = 0);
+    explicit HTTPThread(int socketDescriptor, QString docRoot, QObject *parent=0);
     void run();
 
 private:
     int socketDescriptor;
+    QString docRoot;
     QString read(QTcpSocket *socket);
     QStringList parseRequest(QString request);
 

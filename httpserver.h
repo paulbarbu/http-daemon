@@ -9,7 +9,7 @@ class HTTPServer : public QTcpServer
 {
     Q_OBJECT
 public:
-    explicit HTTPServer(QObject *parent = 0);
+    explicit HTTPServer(QString docRoot, QObject *parent = 0);
     
 signals:
     
@@ -17,6 +17,7 @@ public slots:
 
 private:
     void incomingConnection(int socketDescriptor);
+    QString docRoot;
 };
 
 #endif // HTTPSERVER_H
