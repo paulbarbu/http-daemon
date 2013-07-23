@@ -1,6 +1,8 @@
 #include <QtNetwork/QTcpSocket>
 #include <QFileInfo>
 #include <QFile>
+#include <QStringList>
+#include <QDir>
 
 #include "httpthread.h"
 
@@ -204,5 +206,13 @@ QByteArray HTTPThread::serveStaticFile(const QByteArray &partialResponse,
 QByteArray HTTPThread::serveStaticDir(const QByteArray &partialResponse,
                                       const QString &dirPath)
 {
-    return partialResponse + dirPath.toUtf8();
+    QDir dir(dirPath);
+    QStringList dirList = dir.entryList();
+
+    if(dirList.isEmpty()){
+        return responseStatusLine.arg("404 Not Found\r\n").toAscii();
+    }
+
+    return partialResponse + "Content-Type: text/plain\r\n\r\n" +
+            dirList.join("\n").toUtf8();
 }
