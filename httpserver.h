@@ -17,7 +17,7 @@ public slots:
 
 private:
     void incomingConnection(int socketDescriptor);
-    QString docRoot;
+    const QString docRoot;
 };
 
 #endif // HTTPSERVER_H

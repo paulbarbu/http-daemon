@@ -14,8 +14,11 @@ public:
     void run();
 
 private:
-    int socketDescriptor;
-    QString docRoot;
+    const int socketDescriptor;
+    const QString docRoot;
+
+    const QString responseStatusLine;
+
     QString read(QTcpSocket *socket);
     QHash<QString, QStringList> parseRequest(QString request);
     QByteArray processRequestData(const QHash<QString, QStringList> &requestData);

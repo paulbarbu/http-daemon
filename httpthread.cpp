@@ -62,7 +62,7 @@ QHash<QString, QStringList> HTTPThread::parseRequest(QString request)
     QStringList lines = request.replace("\r", "")
             .split("\n", QString::SkipEmptyParts);
 
-    if(0 == lines.size()){
+    if(lines.isEmpty()){
         return requestData;
     }
 
@@ -75,10 +75,13 @@ QHash<QString, QStringList> HTTPThread::parseRequest(QString request)
     QStringList protocol = statusLine[2].split("/");
     bool ok;
 
+    if(2 != protocol.size()){
+        return requestData;
+    }
+
     double ver = protocol[1].toDouble(&ok);
 
-    if(2 != protocol.size() || "HTTP" != protocol[0] ||
-            !ok || ver < 0.9 || ver > 1.1){
+    if("HTTP" != protocol[0] || !ok || ver < 0.9 || ver > 1.1){
         return requestData;
     }
 
