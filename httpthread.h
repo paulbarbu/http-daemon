@@ -26,6 +26,11 @@ private:
                                const QString &filePath);
     QByteArray serveStaticDir(const QByteArray &partialResponse,
                               const QString &dirPath);
+    QByteArray square(const QByteArray &partialResponse, const QString &queryStr);
+    QByteArray login(const QByteArray &partialResponse,
+                     const QHash<QString, QStringList> &requestData);
+    QByteArray check(const QByteArray &partialResponse,
+                     const QHash<QString, QStringList> &requestData);
 
 signals:
     void error(QAbstractSocket::SocketError socketError);

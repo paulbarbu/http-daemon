@@ -6,6 +6,7 @@
 HTTPServer::HTTPServer(const QString &docRoot, QObject *parent) :
     QTcpServer(parent), docRoot(docRoot)
 {
+    //TODO: check the network and the files owned by my program to see what QTcpServer does
 }
 
 void HTTPServer::incomingConnection(int socketDescriptor){

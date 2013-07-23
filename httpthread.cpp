@@ -60,6 +60,14 @@ QString HTTPThread::read(QTcpSocket *socket){
 
 QHash<QString, QStringList> HTTPThread::parseRequest(QString request)
 {
+    /*struct RequestData{
+     * QStringList statusLine;
+     * QHash<QString, QString> headers;
+     * QHash<QString, QString> postData;
+     * QHash<QString, QString> getData;
+     *} requestData;
+     */
+
     QHash<QString, QStringList> requestData;
 
     QStringList lines = request.replace("\r", "")
@@ -122,13 +130,6 @@ QByteArray HTTPThread::processRequestData(
 
     QString method = requestData["status-line"][0];
 
-    /* dynamic: load HTTPSCripts via HTTPScriptLoader (.so and .dll files) ?
-     * -> evolve this into FastCGI ?
-     * static: serve content as is
-     *
-     * check the network and the files owned by my program to see what QTcpServer does
-     */
-
     if("GET" == method || "POST" == method){
         QString path = requestData["status-line"][1];
         int numberSignPos = path.indexOf("#");
@@ -138,34 +139,22 @@ QByteArray HTTPThread::processRequestData(
         }
 
         int questionMarkPos = path.indexOf("?");
-        QString queryString;
+        QString queryStr;
 
         if(-1 != questionMarkPos){
-            //serve "dynamic" files
-
-            queryString = path.right(path.size()-questionMarkPos-1);
+            queryStr = path.right(path.size()-questionMarkPos-1);
             path = path.left(questionMarkPos);
-            //TODO: parse the query_string
         }
-        else{
-            //serve static files
 
-            QString fullPath = docRoot + path;
-            qDebug() << "Full path: " << fullPath;
-            QFileInfo f(fullPath);
+        //serve static files
 
-            if(!f.exists()){
-                return responseStatusLine.arg("404 Not Found\r\n").toAscii();
-            }
+        QString fullPath = docRoot + path;
+        qDebug() << "Full path: " << fullPath;
+        QFileInfo f(fullPath);
 
-            if(!f.isReadable()){
-                qDebug() << "Not readable!";
-                return responseStatusLine.arg("403 Forbidden\r\n").toAscii() +
-                        "Permission denied\n";
-            }
+        qDebug() << method << " " << docRoot << path << queryStr;
 
-            qDebug() << "Readable!";
-
+        if(f.exists() && f.isReadable()){
             if(f.isDir()){
                 response = serveStaticDir(response, f.absoluteFilePath());
             }
@@ -179,7 +168,29 @@ QByteArray HTTPThread::processRequestData(
             }
         }
 
-        qDebug() << method << " " << docRoot << path << queryString;
+        /* TODO: load HTTPSCripts via HTTPScriptLoader (.so and .dll files) ?
+         * -> evolve this into FastCGI? read more
+         *
+         *What's below isn't good because I have to modify the daemon every
+         *time I want new functionality and the "login", "check", etc. methods are not a semantic part of HTTPThread
+         */
+        else if("/patrat" == path){
+            response = square(response, queryStr);
+        }
+        else if("/login" == path){
+            response = login(response, requestData);
+        }
+        else if("/verifica" == path){
+            response = check(response, requestData);
+        }
+        else if(!f.exists()){
+            response = responseStatusLine.arg("404 Not Found\r\n").toAscii();
+        }
+        else if(!f.isReadable()){
+            qDebug() << "Not readable!";
+            response = responseStatusLine.arg("403 Forbidden\r\n").toAscii() +
+                    "Permission denied\n";
+        }
     }
     else{
         response = responseStatusLine.arg("501 Not Implemented\r\n").toAscii();
@@ -213,6 +224,47 @@ QByteArray HTTPThread::serveStaticDir(const QByteArray &partialResponse,
         return responseStatusLine.arg("404 Not Found\r\n").toAscii();
     }
 
+    //TODO: format as HTML
     return partialResponse + "Content-Type: text/plain\r\n\r\n" +
             dirList.join("\n").toUtf8();
+}
+
+QByteArray HTTPThread::square(const QByteArray &partialResponse, const QString &queryStr)
+{
+    int pos = queryStr.indexOf("a=");
+    if(-1 == pos){
+        return responseStatusLine.arg("403 Bad Request\r\n").toAscii();
+    }
+
+    QString numToSquare = queryStr.right(queryStr.size() - pos - 2);
+    QString body;
+
+    bool ok;
+    double n = numToSquare.toDouble(&ok);
+
+    if(!ok){
+        body = "a-ul trebuie sa fie numar!\n";
+    }
+    else{
+        body = numToSquare + "^2 = " + QString::number(n*n) + "\n";
+    }
+
+    return partialResponse + "\r\n" + body.toAscii();
+}
+
+QByteArray HTTPThread::login(const QByteArray &partialResponse,
+                             const QHash<QString, QStringList> &requestData)
+{
+    return partialResponse + "\r\n<html><body>"
+            "<form method=\"POST\">"
+            "Username: <input type=\"text\" name=\"username\">"
+            "Password: <input type=\"password\" name=\"pass\">"
+            "<INPUT type=\"submit\" value=\"Auth\">"
+            "</form></body></html>";
+}
+
+QByteArray HTTPThread::check(const QByteArray &partialResponse,
+                             const QHash<QString, QStringList> &requestData)
+{
+    return partialResponse + "\r\n";
 }
