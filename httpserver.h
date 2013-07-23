@@ -9,7 +9,7 @@ class HTTPServer : public QTcpServer
 {
     Q_OBJECT
 public:
-    explicit HTTPServer(QString docRoot, QObject *parent = 0);
+    explicit HTTPServer(const QString &docRoot, QObject *parent = 0);
     
 signals:
     

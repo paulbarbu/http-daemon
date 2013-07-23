@@ -9,7 +9,8 @@ class HTTPThread : public QThread
 {
     Q_OBJECT
 public:
-    explicit HTTPThread(int socketDescriptor, QString docRoot, QObject *parent=0);
+    explicit HTTPThread(const int socketDescriptor, const QString &docRoot,
+                        QObject *parent=0);
     void run();
 
 private:

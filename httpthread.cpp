@@ -1,8 +1,11 @@
 #include <QtNetwork/QTcpSocket>
+#include <QFileInfo>
+#include <QFile>
 
 #include "httpthread.h"
 
-HTTPThread::HTTPThread(int socketDescriptor, QString docRoot, QObject *parent) :
+HTTPThread::HTTPThread(const int socketDescriptor, const QString &docRoot,
+                       QObject *parent) :
     QThread(parent), socketDescriptor(socketDescriptor), docRoot(docRoot)
 {
 }

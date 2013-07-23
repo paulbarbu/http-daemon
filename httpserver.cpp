@@ -3,7 +3,7 @@
 #include "httpserver.h"
 #include "httpthread.h"
 
-HTTPServer::HTTPServer(QString docRoot, QObject *parent) :
+HTTPServer::HTTPServer(const QString &docRoot, QObject *parent) :
     QTcpServer(parent), docRoot(docRoot)
 {
 }
