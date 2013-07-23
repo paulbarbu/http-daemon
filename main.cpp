@@ -1,6 +1,7 @@
 #include <QCoreApplication>
 #include <QTextStream>
 #include <QStringList>
+#include <QFileInfo>
 
 #include "httpserver.h"
 
@@ -15,7 +16,11 @@ int main(int argc, char *argv[])
     QString docRoot = "/tmp";
 
     if(-1 != pos){
-        docRoot = args[pos+1];
+        QFileInfo f(args[pos+1]);
+
+        if(f.isReadable()){
+            docRoot = f.absoluteFilePath();
+        }
     }
 
     HTTPServer s(docRoot);
