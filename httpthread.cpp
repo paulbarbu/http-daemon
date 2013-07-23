@@ -6,7 +6,8 @@
 
 HTTPThread::HTTPThread(const int socketDescriptor, const QString &docRoot,
                        QObject *parent) :
-    QThread(parent), socketDescriptor(socketDescriptor), docRoot(docRoot)
+    QThread(parent), socketDescriptor(socketDescriptor), docRoot(docRoot),
+    responseStatusLine("HTTP/1.0 %1\r\n")
 {
 }
 
@@ -110,11 +111,11 @@ QByteArray HTTPThread::processRequestData(
 {
     //TODO: add support for different Host values
     //TODO: URL rewriting?
-    QByteArray response = "HTTP/1.0 200 OK\r\n\r\ndummy text";
+
+    QByteArray response = responseStatusLine.arg("200 OK").toUtf8();
 
     if(requestData.isEmpty()){
-        response = "HTTP/1.0 400 Bad request\r\n";
-        return response;
+        return responseStatusLine.arg("400 Bad request\r\n").toAscii();
     }
 
     QString method = requestData["status-line"][0];
@@ -152,30 +153,34 @@ QByteArray HTTPThread::processRequestData(
             QFileInfo f(fullPath);
 
             if(!f.exists()){
-                return "HTTP/1.0 404 Not Found\r\n";
+                return responseStatusLine.arg("404 Not Found\r\n").toAscii();
             }
 
             if(!f.isReadable()){
                 qDebug() << "Not readable!";
-                return "HTTP/1.0 403 Forbidden\r\nPermission denied\n";
+                return responseStatusLine.arg("403 Forbidden\r\n").toAscii() +
+                        "Permission denied\n";
+            }
+
+            qDebug() << "Readable!";
+
+            if(f.isDir()){
+                response = serveStaticDir(response, f.absoluteFilePath());
             }
             else{
-                qDebug() << "Readable!";
+                response = serveStaticFile(response, f.absoluteFilePath());
 
-                if(f.isDir()){
-                    response = serveStaticDir(response, f.absoluteFilePath());
+                if(response.isEmpty()){
+                    response = responseStatusLine.arg(
+                                "500 Internal Server Error\r\n").toAscii();
                 }
-                else{
-                    response = serveStaticFile(response, f.absoluteFilePath());
-                }
-
             }
         }
 
         qDebug() << method << " " << docRoot << path << queryString;
     }
     else{
-        response = "HTTP/1.0 501 Not Implemented\r\n";
+        response = responseStatusLine.arg("501 Not Implemented\r\n").toAscii();
         qDebug() << "Unsupported HTTP method!";
     }
 
@@ -190,9 +195,10 @@ QByteArray HTTPThread::serveStaticFile(const QByteArray &partialResponse,
 
     if(!file.open( QIODevice::ReadOnly)){
         qDebug() << "Cannot open";
+        return "";
     }
 
-    return partialResponse + file.readAll();
+    return partialResponse + "\r\n" + file.readAll();
 }
 
 QByteArray HTTPThread::serveStaticDir(const QByteArray &partialResponse,
