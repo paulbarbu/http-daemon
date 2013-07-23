@@ -27,10 +27,9 @@ void HTTPThread::run()
     QString request = readRequest(&socket);
     qDebug() << request;
 
+    //TODO: create a ResponseData struct instead of running around with QStrings?
     QByteArray response = processRequestData(parseHTTPRequest(request));
 
-    //TODO: construct the response in a nice data structure and put it toghether here
-    //also be good and send a Content-Length field (bytes)
     socket.write(response, response.size());
 
     if(!socket.waitForBytesWritten()){
@@ -67,15 +66,15 @@ RequestData HTTPThread::parseHTTPRequest(QString request)
     RequestData requestData;
     requestData.valid = false;
 
-    //TODO: what if I encounter \r\n in the URL or in the POST data?
-    //TODO: be tolerant and replace "\r" with "" and then work with "\n"
-    QStringList parts = request.split("\r\n\r\n", QString::SkipEmptyParts);
+    QStringList parts = request.replace("\r", "").split("\n\n", QString::SkipEmptyParts);
 
     if(parts.isEmpty()){
         return requestData;
     }
 
-    QStringList fields = parts[0].split("\r\n", QString::SkipEmptyParts);
+    QStringList fields = parts[0].split("\n", QString::SkipEmptyParts);
+
+    qDebug() << "Fields" << fields;
 
     QStringList statusLine = fields[0].split(" ");
 
@@ -118,7 +117,10 @@ RequestData HTTPThread::parseHTTPRequest(QString request)
     if("POST" == requestData.method && 2 == parts.size() &&
             !parts[1].isEmpty()){
         requestData.postData = parsePostBody(parts[1]);
-        //TODO: if it's empty error out
+
+        if(requestData.postData.isEmpty()){
+            return requestData;
+        }
     }
 
     qDebug() << "Request data:\n\tStatusLine:\n\t\tMethod: "
@@ -135,16 +137,14 @@ RequestData HTTPThread::parseHTTPRequest(QString request)
 
 QHash<QString, QString> HTTPThread::parsePostBody(QString postBody)
 {
-    // what if a radiobox is checked and sent?
-    // what if: "option_set", with no "=" sign, is it possible?
-    // what if the data contains "&"?
     QHash<QString, QString> retval;
-
-    QStringList pairs = postBody.split("&", QString::SkipEmptyParts); //TODO: ???
+    QStringList pairs = postBody.split("&", QString::SkipEmptyParts);
 
     foreach(QString pair, pairs){
-        QStringList keyVal = pair.split("="); //TODO: ???
-        retval.insert(keyVal[0], keyVal[1]); //TODO: ???
+        QStringList keyVal = pair.split("=");
+
+        //TODO: URL-decode these
+        retval.insert(keyVal[0], keyVal[1]);
     }
 
     return retval;
@@ -152,7 +152,7 @@ QHash<QString, QString> HTTPThread::parsePostBody(QString postBody)
 
 QByteArray HTTPThread::processRequestData(const RequestData &requestData)
 {
-    //TODO: add support for different Host values
+    //TODO: add support for different Host values?
     //TODO: URL rewriting?
 
     QByteArray response = responseStatusLine.arg("200 OK").toUtf8();
@@ -183,13 +183,14 @@ QByteArray HTTPThread::processRequestData(const RequestData &requestData)
             }
         }
 
-        /* TODO: load HTTPSCripts via HTTPScriptLoader (.so and .dll files) ?
+        /* TODO: load things via a common interface from .so and .dll files?
          * -> evolve this into FastCGI? read more
          *
          * or at least create a mapping of path -> method
          *
-         *What's below isn't good because I have to modify the daemon every
-         *time I want new functionality and the "login", "check", etc. methods are not a semantic part of HTTPThread
+         * What's below isn't good because I have to modify the daemon every
+         * time I want new functionality and the "login", "check", etc.
+         * methods are not a semantic part of HTTPThread
          */
         else if("/patrat" == requestData.url.path()){
             response = square(response, requestData);
