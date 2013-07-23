@@ -273,16 +273,46 @@ QByteArray HTTPThread::square(const QByteArray &partialResponse,
 QByteArray HTTPThread::login(const QByteArray &partialResponse,
                              const RequestData &requestData)
 {
-    return partialResponse + "\r\n<html><body>"
+    QString page = "\r\n<html><body>"
             "<form method=\"POST\">"
+            "%1"
             "Username: <input type=\"text\" name=\"username\">"
             "Password: <input type=\"password\" name=\"pass\">"
             "<INPUT type=\"submit\" value=\"Auth\">"
             "</form></body></html>";
+
+    if("GET" == requestData.method){
+        return partialResponse + page.arg("").toAscii();
+    }
+
+    if("POST" == requestData.method && !requestData.postData.isEmpty()){
+        if(requestData.postData.contains("username") &&
+                "Ion" == requestData.postData["username"] &&
+                requestData.postData.contains("pass") &&
+                "1234" == requestData.postData["pass"]){
+
+            return partialResponse + "Set-Cookie: loggedin=1\r\n\r\nYou're logged in!";
+        }
+
+        return partialResponse +
+                page.arg("Login failed, try again!<br>").toAscii();
+    }
+
+    return responseStatusLine.arg("400 Bad request\r\n").toAscii();
 }
 
 QByteArray HTTPThread::check(const QByteArray &partialResponse,
-                             const QHash<QString, QStringList> &requestData)
+                             const RequestData &requestData)
 {
-    return partialResponse + "\r\n";
+    if("GET" != requestData.method){
+        return responseStatusLine.arg("400 Bad request\r\n").toAscii();
+    }
+
+    if(requestData.fields.contains("Cookie") &&
+            "loggedin=1" == requestData.fields["Cookie"][0]){
+
+        return partialResponse + "\r\nYou're logged in!";
+    }
+
+    return partialResponse + "\r\nYou're not logged in!";;
 }
