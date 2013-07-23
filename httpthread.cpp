@@ -27,7 +27,7 @@ void HTTPThread::run()
     QString request = readRequest(&socket);
     qDebug() << request;
 
-    //TODO: create a ResponseData struct instead of running around with QStrings?
+    //TODO: create a ResponseData class instead of running around with QStrings?
     QByteArray response = processRequestData(parser.parseRequest(request));
 
     socket.write(response, response.size());
@@ -67,6 +67,7 @@ QByteArray HTTPThread::processRequestData(const RequestData &requestData)
 {
     //TODO: add support for different Host values?
     //TODO: URL rewriting?
+    //TODO: integrate PHP
 
     QByteArray response = responseStatusLine.arg("200 OK").toUtf8();
 
