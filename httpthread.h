@@ -18,7 +18,11 @@ private:
     QString docRoot;
     QString read(QTcpSocket *socket);
     QHash<QString, QStringList> parseRequest(QString request);
-    QString processRequestData(QHash<QString, QStringList> requestData);
+    QByteArray processRequestData(const QHash<QString, QStringList> &requestData);
+    QByteArray serveStaticFile(const QByteArray &partialResponse,
+                               const QString &filePath);
+    QByteArray serveStaticDir(const QByteArray &partialResponse,
+                              const QString &dirPath);
 
 signals:
     void error(QAbstractSocket::SocketError socketError);

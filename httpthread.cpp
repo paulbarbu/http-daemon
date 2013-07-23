@@ -24,7 +24,7 @@ void HTTPThread::run()
     QString request = read(&socket);
     qDebug() << request;
 
-    QByteArray response = processRequestData(parseRequest(request)).toUtf8();
+    QByteArray response = processRequestData(parseRequest(request));
 
     socket.write(response, response.size());
 
@@ -102,12 +102,12 @@ QHash<QString, QStringList> HTTPThread::parseRequest(QString request)
     return requestData;
 }
 
-QString HTTPThread::processRequestData(QHash<QString, QStringList> requestData)
+QByteArray HTTPThread::processRequestData(
+        const QHash<QString, QStringList> &requestData)
 {
     //TODO: add support for different Host values
-
-    //TODO: parse the query_string
-    QString response("HTTP/1.0 200 OK\r\n\r\ndummy text");
+    //TODO: URL rewriting?
+    QByteArray response = "HTTP/1.0 200 OK\r\n\r\ndummy text";
 
     if(requestData.isEmpty()){
         response = "HTTP/1.0 400 Bad request\r\n";
@@ -116,11 +116,60 @@ QString HTTPThread::processRequestData(QHash<QString, QStringList> requestData)
 
     QString method = requestData["status-line"][0];
 
-    if("GET" == method){
-        qDebug() << "GET from " << docRoot << requestData["status-line"][1];
-    }
-    else if("POST" == method){
-        qDebug() << "POST!";
+    /* dynamic: load HTTPSCripts via HTTPScriptLoader (.so and .dll files) ?
+     * -> evolve this into FastCGI ?
+     * static: serve content as is
+     *
+     * check the network and the files owned by my program to see what QTcpServer does
+     */
+
+    if("GET" == method || "POST" == method){
+        QString path = requestData["status-line"][1];
+        int numberSignPos = path.indexOf("#");
+
+        if(-1 != numberSignPos){
+            path = path.left(numberSignPos);
+        }
+
+        int questionMarkPos = path.indexOf("?");
+        QString queryString;
+
+        if(-1 != questionMarkPos){
+            //serve "dynamic" files
+
+            queryString = path.right(path.size()-questionMarkPos-1);
+            path = path.left(questionMarkPos);
+            //TODO: parse the query_string
+        }
+        else{
+            //serve static files
+
+            QString fullPath = docRoot + path;
+            qDebug() << "Full path: " << fullPath;
+            QFileInfo f(fullPath);
+
+            if(!f.exists()){
+                return "HTTP/1.0 404 Not Found\r\n";
+            }
+
+            if(!f.isReadable()){
+                qDebug() << "Not readable!";
+                return "HTTP/1.0 403 Forbidden\r\nPermission denied\n";
+            }
+            else{
+                qDebug() << "Readable!";
+
+                if(f.isDir()){
+                    response = serveStaticDir(response, f.absoluteFilePath());
+                }
+                else{
+                    response = serveStaticFile(response, f.absoluteFilePath());
+                }
+
+            }
+        }
+
+        qDebug() << method << " " << docRoot << path << queryString;
     }
     else{
         response = "HTTP/1.0 501 Not Implemented\r\n";
@@ -128,4 +177,23 @@ QString HTTPThread::processRequestData(QHash<QString, QStringList> requestData)
     }
 
     return response;
+}
+
+QByteArray HTTPThread::serveStaticFile(const QByteArray &partialResponse,
+                                       const QString &filePath)
+{
+    //TODO: set the mime type
+    QFile file(filePath);
+
+    if(!file.open( QIODevice::ReadOnly)){
+        qDebug() << "Cannot open";
+    }
+
+    return partialResponse + file.readAll();
+}
+
+QByteArray HTTPThread::serveStaticDir(const QByteArray &partialResponse,
+                                      const QString &dirPath)
+{
+    return partialResponse + dirPath.toUtf8();
 }
