@@ -16,8 +16,12 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     httpserver.cpp \
-    httpthread.cpp
+    httpthread.cpp \
+    httpparser.cpp
 
 HEADERS += \
     httpserver.h \
-    httpthread.h
+    httpthread.h \
+    httpparser.h
+
+OTHER_FILES +=
