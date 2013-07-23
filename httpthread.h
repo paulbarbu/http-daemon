@@ -4,6 +4,21 @@
 #include <QThread>
 #include <QtNetwork/QTcpSocket>
 #include <QStringList>
+#include <QUrl>
+
+struct RequestData
+{
+
+    QString method;
+    QUrl url;
+    QString protocol;
+    double protocolVersion;
+
+    QHash<QString, QStringList> fields;
+    QHash<QString, QString> postData;
+
+    bool valid;
+};
 
 class HTTPThread : public QThread
 {
@@ -19,18 +34,20 @@ private:
 
     const QString responseStatusLine;
 
-    QString read(QTcpSocket *socket);
-    QHash<QString, QStringList> parseRequest(QString request);
-    QByteArray processRequestData(const QHash<QString, QStringList> &requestData);
+    QString readRequest(QTcpSocket *socket);
+    RequestData parseHTTPRequest(QString request);
+    QHash<QString, QString> parsePostBody(QString postBody);
+    QByteArray processRequestData(const RequestData &requestData);
     QByteArray serveStaticFile(const QByteArray &partialResponse,
                                const QString &filePath);
     QByteArray serveStaticDir(const QByteArray &partialResponse,
                               const QString &dirPath);
-    QByteArray square(const QByteArray &partialResponse, const QString &queryStr);
+    QByteArray square(const QByteArray &partialResponse,
+                      const RequestData &requestData);
     QByteArray login(const QByteArray &partialResponse,
-                     const QHash<QString, QStringList> &requestData);
+                     const RequestData &requestData);
     QByteArray check(const QByteArray &partialResponse,
-                     const QHash<QString, QStringList> &requestData);
+                     const RequestData &requestData);
 
 signals:
     void error(QAbstractSocket::SocketError socketError);

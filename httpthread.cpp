@@ -24,11 +24,13 @@ void HTTPThread::run()
         return;
     }
 
-    QString request = read(&socket);
+    QString request = readRequest(&socket);
     qDebug() << request;
 
-    QByteArray response = processRequestData(parseRequest(request));
+    QByteArray response = processRequestData(parseHTTPRequest(request));
 
+    //TODO: construct the response in a nice data structure and put it toghether here
+    //also be good and send a Content-Length field (bytes)
     socket.write(response, response.size());
 
     if(!socket.waitForBytesWritten()){
@@ -39,8 +41,10 @@ void HTTPThread::run()
     socket.close();
 }
 
-QString HTTPThread::read(QTcpSocket *socket){
+QString HTTPThread::readRequest(QTcpSocket *socket){
     QString request;
+
+    //TODO: what if is a POST?
 
     do{
         if(!socket->waitForReadyRead()){
@@ -58,26 +62,22 @@ QString HTTPThread::read(QTcpSocket *socket){
     return request;
 }
 
-QHash<QString, QStringList> HTTPThread::parseRequest(QString request)
+RequestData HTTPThread::parseHTTPRequest(QString request)
 {
-    /*struct RequestData{
-     * QStringList statusLine;
-     * QHash<QString, QString> headers;
-     * QHash<QString, QString> postData;
-     * QHash<QString, QString> getData;
-     *} requestData;
-     */
+    RequestData requestData;
+    requestData.valid = false;
 
-    QHash<QString, QStringList> requestData;
+    //TODO: what if I encounter \r\n in the URL or in the POST data?
+    //TODO: be tolerant and replace "\r" with "" and then work with "\n"
+    QStringList parts = request.split("\r\n\r\n", QString::SkipEmptyParts);
 
-    QStringList lines = request.replace("\r", "")
-            .split("\n", QString::SkipEmptyParts);
-
-    if(lines.isEmpty()){
+    if(parts.isEmpty()){
         return requestData;
     }
 
-    QStringList statusLine = lines[0].split(" ");
+    QStringList fields = parts[0].split("\r\n", QString::SkipEmptyParts);
+
+    QStringList statusLine = fields[0].split(" ");
 
     if(3 != statusLine.size()){
         return requestData;
@@ -96,63 +96,78 @@ QHash<QString, QStringList> HTTPThread::parseRequest(QString request)
         return requestData;
     }
 
-    statusLine.removeAt(2);
-    requestData["status-line"] = statusLine + protocol;
+    requestData.method = statusLine[0];
+    requestData.url.setUrl(statusLine[1]);
+    requestData.protocol = protocol[0];
+    requestData.protocolVersion = ver;
 
-    lines.removeAt(0);
+    fields.removeAt(0);
     int spacePos;
-    foreach(QString line, lines){
+    foreach(QString line, fields){
         spacePos = line.indexOf(" ");
 
-        requestData.insert(line.left(spacePos-1),
+        requestData.fields.insert(line.left(spacePos-1),
                            QStringList(line.right(line.size()-spacePos-1)));
     }
 
-    if(requestData.contains("Host")){
-        requestData["Host"] = requestData["Host"][0].split(":");
+    if(requestData.fields.contains("Host")){
+        requestData.fields["Host"] = requestData.fields["Host"][0].split(":");
     }
 
-    //qDebug() << requestData;
+
+    if("POST" == requestData.method && 2 == parts.size() &&
+            !parts[1].isEmpty()){
+        requestData.postData = parsePostBody(parts[1]);
+        //TODO: if it's empty error out
+    }
+
+    qDebug() << "Request data:\n\tStatusLine:\n\t\tMethod: "
+             << requestData.method << "\n\t\tUrl: "
+             << requestData.url << "\n\t\tProtocol: "
+             << requestData.protocol << "\n\t\tVer: "
+             <<requestData.protocolVersion
+             << "\n\tFields: " << requestData.fields
+             << "\n\tpost: " << requestData.postData;
+
+    requestData.valid = true;
     return requestData;
 }
 
-QByteArray HTTPThread::processRequestData(
-        const QHash<QString, QStringList> &requestData)
+QHash<QString, QString> HTTPThread::parsePostBody(QString postBody)
+{
+    // what if a radiobox is checked and sent?
+    // what if: "option_set", with no "=" sign, is it possible?
+    // what if the data contains "&"?
+    QHash<QString, QString> retval;
+
+    QStringList pairs = postBody.split("&", QString::SkipEmptyParts); //TODO: ???
+
+    foreach(QString pair, pairs){
+        QStringList keyVal = pair.split("="); //TODO: ???
+        retval.insert(keyVal[0], keyVal[1]); //TODO: ???
+    }
+
+    return retval;
+}
+
+QByteArray HTTPThread::processRequestData(const RequestData &requestData)
 {
     //TODO: add support for different Host values
     //TODO: URL rewriting?
 
     QByteArray response = responseStatusLine.arg("200 OK").toUtf8();
 
-    if(requestData.isEmpty()){
+    if(!requestData.valid){
         return responseStatusLine.arg("400 Bad request\r\n").toAscii();
     }
 
-    QString method = requestData["status-line"][0];
-
-    if("GET" == method || "POST" == method){
-        QString path = requestData["status-line"][1];
-        int numberSignPos = path.indexOf("#");
-
-        if(-1 != numberSignPos){
-            path = path.left(numberSignPos);
-        }
-
-        int questionMarkPos = path.indexOf("?");
-        QString queryStr;
-
-        if(-1 != questionMarkPos){
-            queryStr = path.right(path.size()-questionMarkPos-1);
-            path = path.left(questionMarkPos);
-        }
-
+    if("GET" == requestData.method || "POST" == requestData.method){
         //serve static files
 
-        QString fullPath = docRoot + path;
-        qDebug() << "Full path: " << fullPath;
+        QString fullPath = docRoot + requestData.url.path();
         QFileInfo f(fullPath);
 
-        qDebug() << method << " " << docRoot << path << queryStr;
+        qDebug() << requestData.method << " " << fullPath;
 
         if(f.exists() && f.isReadable()){
             if(f.isDir()){
@@ -171,16 +186,18 @@ QByteArray HTTPThread::processRequestData(
         /* TODO: load HTTPSCripts via HTTPScriptLoader (.so and .dll files) ?
          * -> evolve this into FastCGI? read more
          *
+         * or at least create a mapping of path -> method
+         *
          *What's below isn't good because I have to modify the daemon every
          *time I want new functionality and the "login", "check", etc. methods are not a semantic part of HTTPThread
          */
-        else if("/patrat" == path){
-            response = square(response, queryStr);
+        else if("/patrat" == requestData.url.path()){
+            response = square(response, requestData);
         }
-        else if("/login" == path){
+        else if("/login" == requestData.url.path()){
             response = login(response, requestData);
         }
-        else if("/verifica" == path){
+        else if("/verifica" == requestData.url.path()){
             response = check(response, requestData);
         }
         else if(!f.exists()){
@@ -198,6 +215,7 @@ QByteArray HTTPThread::processRequestData(
     }
 
     return response;
+    return responseStatusLine.arg("200 OK\r\n").toAscii();
 }
 
 QByteArray HTTPThread::serveStaticFile(const QByteArray &partialResponse,
@@ -229,14 +247,14 @@ QByteArray HTTPThread::serveStaticDir(const QByteArray &partialResponse,
             dirList.join("\n").toUtf8();
 }
 
-QByteArray HTTPThread::square(const QByteArray &partialResponse, const QString &queryStr)
+QByteArray HTTPThread::square(const QByteArray &partialResponse,
+                              const RequestData &requestData)
 {
-    int pos = queryStr.indexOf("a=");
-    if(-1 == pos){
-        return responseStatusLine.arg("403 Bad Request\r\n").toAscii();
+    if("GET" != requestData.method || !requestData.url.hasQueryItem("a")){
+        return responseStatusLine.arg("400 Bad Request\r\n").toAscii();
     }
 
-    QString numToSquare = queryStr.right(queryStr.size() - pos - 2);
+    QString numToSquare = requestData.url.queryItemValue("a");
     QString body;
 
     bool ok;
@@ -253,7 +271,7 @@ QByteArray HTTPThread::square(const QByteArray &partialResponse, const QString &
 }
 
 QByteArray HTTPThread::login(const QByteArray &partialResponse,
-                             const QHash<QString, QStringList> &requestData)
+                             const RequestData &requestData)
 {
     return partialResponse + "\r\n<html><body>"
             "<form method=\"POST\">"

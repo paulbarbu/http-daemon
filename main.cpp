@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     else{
         out << "Listening on " << s.serverAddress().toString() << ":"
             << s.serverPort() << endl;
-        out << "Documnet root is in: " << docRoot << endl;
+        out << "Document root is in: " << docRoot << endl;
     }
 
     return a.exec();

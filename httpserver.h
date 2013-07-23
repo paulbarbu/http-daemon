@@ -3,8 +3,6 @@
 
 #include <QtNetwork/QTcpServer>
 
-
-
 class HTTPServer : public QTcpServer
 {
     Q_OBJECT
