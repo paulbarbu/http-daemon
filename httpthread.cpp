@@ -8,59 +8,87 @@
 
 HTTPThread::HTTPThread(const int socketDescriptor, const QString &docRoot,
                        QObject *parent) :
-    QThread(parent), socketDescriptor(socketDescriptor), docRoot(docRoot),
+    QThread(parent), isParsedHeader(false),
+    socketDescriptor(socketDescriptor), docRoot(docRoot),
     responseStatusLine("HTTP/1.0 %1\r\n")
 {
-}
-
-void HTTPThread::run()
-{
-    QTcpSocket socket;
-
     if(!socket.setSocketDescriptor(socketDescriptor)){
         qDebug() << "Setting the sd has failed: " << socket.errorString();
         emit error(socket.error());
 
         return;
     }
-
-    QString request = readRequest(&socket);
-    qDebug() << request;
-
-    //TODO: create a ResponseData class instead of running around with QStrings?
-    QByteArray response = processRequestData(parser.parseRequest(request));
-
-    socket.write(response, response.size());
-
-    if(!socket.waitForBytesWritten()){
-        qDebug() << "Could not write byts to socket: " << socket.errorString();
-        emit error(socket.error());
-    }
-
-    socket.close();
 }
 
-QString HTTPThread::readRequest(QTcpSocket *socket){
-    QString request;
+void HTTPThread::run()
+{
+    connect(&socket, SIGNAL(readyRead()), this, SLOT(read()));
+    connect(&socket, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
+    //TODO: connect for error
+    //TODO: create a ResponseData class instead of running around with QStrings?
 
-    //TODO: what if is a POST and the data won't come in one chunk?
-    // if the header is sent and then the POST data then this will fail to get
-    // the POST data
+    exec();
+}
 
-    do{
-        if(!socket->waitForReadyRead()){
-            qDebug() << "Error while waiting for client data: "
-                     << socket->errorString();
-            emit error(socket->error());
+void HTTPThread::read(){
+    request.append(QString(socket.readAll()));
 
-            return request;
+    QString lf = "\n\n";
+    int crlfPos = request.indexOf("\r\n\r\n");
+    int lfPos = request.indexOf("\n\n");
+
+    if(!isParsedHeader && (-1 != crlfPos || -1 != lfPos)){
+        qDebug() << "Found delimiter!";
+        requestData = parser.parseRequestHeader(request);
+
+        if(-1 != crlfPos){
+            lf = "\r\n\r\n";
+            lfPos = crlfPos;
         }
 
-        request.append(QString(socket->readAll()));
-    }while(-1 == request.lastIndexOf("\n\n") &&
-           -1 == request.lastIndexOf("\r\n\r\n"));
+        bytesToParse = requestData.contentLength;
+        request = request.replace(lf, "").right(request.size()-lfPos-lf.size());
+        isParsedHeader = true;
 
-    return request;
+        qDebug() << "After parsing: " << request;
+    }
+
+    if(isParsedHeader && "POST" == requestData.method && !request.isEmpty() &&
+            bytesToParse > 0){
+        bytesToParse -= request.size();
+        qDebug() << "Parsing req body " << request;
+        QHash<QString, QString> postData = parser.parsePostBody(request);
+
+        if(!postData.isEmpty()){
+            QHash<QString, QString>::const_iterator i;
+            for(i = postData.constBegin(); i != postData.constEnd(); ++i){
+                requestData.postData.insert(i.key(), i.value());
+            }
+
+            request = "";
+        }
+
+        qDebug() << "After: " << request;
+
+        qDebug() << "Request data:\n\tMethod: "
+                 << requestData.method << "\n\tUrl: "
+                 << requestData.url << "\n\tProtocol: "
+                 << requestData.protocol << "\n\tVer: "
+                 <<requestData.protocolVersion
+                 << "\n\tFields: " << requestData.fields
+                 << "\n\tContent-Length: " << requestData.contentLength
+                 << "\n\tpost: " << requestData.postData;
+    }
+
+    if(isParsedHeader &&
+            (0 == bytesToParse || "GET" == requestData.method)){
+        //emit a signal and connect it to the slot below
+        QByteArray response = processRequestData(requestData);
+
+        socket.write(response, response.size());
+
+        socket.disconnectFromHost();
+    }
 }
 
 QByteArray HTTPThread::processRequestData(const RequestData &requestData)
@@ -230,4 +258,10 @@ QByteArray HTTPThread::check(const QByteArray &partialResponse,
     }
 
     return partialResponse + "\r\nYou're not logged in!";;
+}
+
+void HTTPThread::onDisconnect()
+{
+    qDebug() << "Disconnected!";
+    quit();
 }

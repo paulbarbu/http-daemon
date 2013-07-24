@@ -15,13 +15,17 @@ public:
     void run();
 
 private:
+    QString request;
+    QTcpSocket socket;
     HTTPParser parser;
+    RequestData requestData;
+    bool isParsedHeader;
+    int bytesToParse;
 
     const int socketDescriptor;
     const QString docRoot;
     const QString responseStatusLine;
 
-    QString readRequest(QTcpSocket *socket);
     QByteArray processRequestData(const RequestData &requestData);
     QByteArray serveStaticFile(const QByteArray &partialResponse,
                                const QString &filePath);
@@ -37,6 +41,8 @@ private:
 signals:
     void error(QAbstractSocket::SocketError socketError);
 public slots:
+    void onDisconnect();
+    void read();
 };
 
 #endif // HTTPTHREAD_H
