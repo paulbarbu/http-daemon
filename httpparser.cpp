@@ -44,6 +44,11 @@ RequestData HTTPParser::parseRequestHeader(const QString &req)
         return requestData;
     }
 
+    //path cannot be empty
+    if(statusLine[1].isEmpty()){
+        return requestData;
+    }
+
     QStringList protocol = statusLine[2].split("/");
     bool ok;
 
