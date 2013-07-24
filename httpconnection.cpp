@@ -3,38 +3,30 @@
 #include <QFile>
 #include <QStringList>
 #include <QDir>
+#include <QThread>
 
-#include "httpthread.h"
+#include "httpconnection.h"
 
-HTTPThread::HTTPThread(const int socketDescriptor, const QString &docRoot,
-                       QObject *parent) :
-    QThread(parent), isParsedHeader(false),
-    socketDescriptor(socketDescriptor), docRoot(docRoot),
-    responseStatusLine("HTTP/1.0 %1\r\n")
+HTTPConnection::HTTPConnection(int socketDescriptor, const QString &docRoot,
+                       QObject *parent) : QObject(parent), socket(this), isParsedHeader(false),
+    docRoot(docRoot), responseStatusLine("HTTP/1.0 %1\r\n")
 {
     if(!socket.setSocketDescriptor(socketDescriptor)){
-        qDebug() << "Setting the sd has failed: " << socket.errorString();
-        emit error(socket.error());
-
-        return;
+        qDebug() << socket.errorString() << "Cannot set sd: " << socketDescriptor;
+        emit closed();
     }
+}
 
-    connect(&socket, SIGNAL(disconnected()), this, SLOT(quit()));
+void HTTPConnection::start()
+{
     connect(&socket, SIGNAL(error(QAbstractSocket::SocketError)), this,
             SLOT(onError(QAbstractSocket::SocketError)));
-    connect(this, SIGNAL(requestParsed(RequestData)), this,
-                         SLOT(onRequestParsed(RequestData)));
     connect(&socket, SIGNAL(readyRead()), this, SLOT(read()));
+    connect(this, SIGNAL(requestParsed(RequestData)), this,
+            SLOT(onRequestParsed(RequestData)));
 }
 
-void HTTPThread::run()
-{
-
-    //TODO: create a ResponseData class instead of running around with QStrings?
-    exec();
-}
-
-void HTTPThread::read(){
+void HTTPConnection::read(){
     request.append(QString(socket.readAll()));
 
     QString lf = "\n\n";
@@ -83,7 +75,7 @@ void HTTPThread::read(){
     }
 }
 
-QByteArray HTTPThread::processRequestData(const RequestData &requestData)
+QByteArray HTTPConnection::processRequestData(const RequestData &requestData)
 {
     //TODO: add support for different Host values?
     //TODO: URL rewriting?
@@ -154,10 +146,9 @@ QByteArray HTTPThread::processRequestData(const RequestData &requestData)
     }
 
     return response;
-    return responseStatusLine.arg("200 OK\r\n").toAscii();
 }
 
-QByteArray HTTPThread::serveStaticFile(const QByteArray &partialResponse,
+QByteArray HTTPConnection::serveStaticFile(const QByteArray &partialResponse,
                                        const QString &filePath)
 {
     //TODO: set the mime type
@@ -171,7 +162,7 @@ QByteArray HTTPThread::serveStaticFile(const QByteArray &partialResponse,
     return partialResponse + "\r\n" + file.readAll();
 }
 
-QByteArray HTTPThread::serveStaticDir(const QByteArray &partialResponse,
+QByteArray HTTPConnection::serveStaticDir(const QByteArray &partialResponse,
                                       const QString &dirPath)
 {
     QDir dir(dirPath);
@@ -186,7 +177,7 @@ QByteArray HTTPThread::serveStaticDir(const QByteArray &partialResponse,
             dirList.join("\n").toUtf8();
 }
 
-QByteArray HTTPThread::square(const QByteArray &partialResponse,
+QByteArray HTTPConnection::square(const QByteArray &partialResponse,
                               const RequestData &requestData)
 {
     if("GET" != requestData.method || !requestData.url.hasQueryItem("a")){
@@ -209,7 +200,7 @@ QByteArray HTTPThread::square(const QByteArray &partialResponse,
     return partialResponse + "\r\n" + body.toAscii();
 }
 
-QByteArray HTTPThread::login(const QByteArray &partialResponse,
+QByteArray HTTPConnection::login(const QByteArray &partialResponse,
                              const RequestData &requestData)
 {
     QString page = "\r\n<html><body>"
@@ -240,7 +231,7 @@ QByteArray HTTPThread::login(const QByteArray &partialResponse,
     return responseStatusLine.arg("400 Bad request\r\n").toAscii();
 }
 
-QByteArray HTTPThread::check(const QByteArray &partialResponse,
+QByteArray HTTPConnection::check(const QByteArray &partialResponse,
                              const RequestData &requestData)
 {
     if("GET" != requestData.method){
@@ -256,15 +247,15 @@ QByteArray HTTPThread::check(const QByteArray &partialResponse,
     return partialResponse + "\r\nYou're not logged in!";;
 }
 
-void HTTPThread::onError(QAbstractSocket::SocketError socketError)
+void HTTPConnection::onError(QAbstractSocket::SocketError socketError)
 {
     qDebug() << socketError << ": " << socket.errorString();
     socket.disconnectFromHost();
-    emit error(socketError);
-    quit();
+    socket.waitForDisconnected(1000);
+    emit closed();
 }
 
-void HTTPThread::onRequestParsed(const RequestData &requestData)
+void HTTPConnection::onRequestParsed(const RequestData &requestData)
 {
     qDebug() << "Request data:\n\tMethod: "
              << requestData.method << "\n\tUrl: "
@@ -279,4 +270,6 @@ void HTTPThread::onRequestParsed(const RequestData &requestData)
 
     socket.write(response, response.size());
     socket.disconnectFromHost();
+    socket.waitForDisconnected(1000);
+    emit closed();
 }

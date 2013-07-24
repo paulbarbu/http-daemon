@@ -1,18 +1,16 @@
-#ifndef HTTPTHREAD_H
-#define HTTPTHREAD_H
+#ifndef HTTPCONNECTION_H
+#define HTTPCONNECTION_H
 
-#include <QThread>
 #include <QtNetwork/QTcpSocket>
 
 #include "httpparser.h"
 
-class HTTPThread : public QThread
+class HTTPConnection : public QObject
 {
     Q_OBJECT
 public:
-    explicit HTTPThread(const int socketDescriptor, const QString &docRoot,
+    explicit HTTPConnection(int socketDescriptor, const QString &docRoot,
                         QObject *parent=0);
-    void run();
 
 private:
     QString request;
@@ -22,7 +20,6 @@ private:
     bool isParsedHeader;
     int bytesToParse;
 
-    const int socketDescriptor;
     const QString docRoot;
     const QString responseStatusLine;
 
@@ -39,9 +36,10 @@ private:
                      const RequestData &requestData);
 
 signals:
-    void error(QAbstractSocket::SocketError socketError);
+    void closed();
     void requestParsed(const RequestData &requestData);
 public slots:
+    void start();
     void onError(QAbstractSocket::SocketError socketError);
     void onRequestParsed(const RequestData &requestData);
     void read();
