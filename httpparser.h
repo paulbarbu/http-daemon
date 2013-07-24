@@ -23,10 +23,8 @@ class HTTPParser
 {
 public:
     HTTPParser();
-    QHash<QString, QString> parsePostBody(QString postBody);
+    QHash<QString, QString> parsePostBody(const QString &postBody);
     RequestData parseRequest(QString request);
-
-    void setRequest(const QString &value);
 };
 
 #endif // HTTPPARSER_H

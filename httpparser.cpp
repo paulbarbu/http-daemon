@@ -6,8 +6,8 @@ HTTPParser::HTTPParser()
 {
 
 }
-
-QHash<QString, QString> HTTPParser::parsePostBody(QString postBody)
+//TODO: work with QByteArrays
+QHash<QString, QString> HTTPParser::parsePostBody(const QString &postBody)
 {
     QHash<QString, QString> retval;
     QStringList pairs = postBody.split("&", QString::SkipEmptyParts);
@@ -15,8 +15,12 @@ QHash<QString, QString> HTTPParser::parsePostBody(QString postBody)
     foreach(QString pair, pairs){
         QStringList keyVal = pair.split("=");
 
+        if(2 != keyVal.size()){
+            return QHash<QString, QString>();
+        }
+
         //TODO: URL-decode these
-        retval.insert(keyVal[0], keyVal[1]);
+        retval.insert(keyVal[0].trimmed(), keyVal[1].trimmed());
     }
 
     return retval;
