@@ -40,8 +40,10 @@ private:
 
 signals:
     void error(QAbstractSocket::SocketError socketError);
+    void requestParsed(const RequestData &requestData);
 public slots:
-    void onDisconnect();
+    void onError(QAbstractSocket::SocketError socketError);
+    void onRequestParsed(const RequestData &requestData);
     void read();
 };
 

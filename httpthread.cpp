@@ -18,15 +18,20 @@ HTTPThread::HTTPThread(const int socketDescriptor, const QString &docRoot,
 
         return;
     }
+
+    qDebug() <<"connects:";
+    connect(&socket, SIGNAL(disconnected()), this, SLOT(quit()));
+    connect(&socket, SIGNAL(error(QAbstractSocket::SocketError)), this,
+            SLOT(onError(QAbstractSocket::SocketError)));
+    connect(this, SIGNAL(requestParsed(RequestData)), this,
+                         SLOT(onRequestParsed(RequestData)));
+    connect(&socket, SIGNAL(readyRead()), this, SLOT(read()));
 }
 
 void HTTPThread::run()
 {
-    connect(&socket, SIGNAL(readyRead()), this, SLOT(read()));
-    connect(&socket, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
-    //TODO: connect for error
-    //TODO: create a ResponseData class instead of running around with QStrings?
 
+    //TODO: create a ResponseData class instead of running around with QStrings?
     exec();
 }
 
@@ -82,12 +87,7 @@ void HTTPThread::read(){
 
     if(isParsedHeader &&
             (0 == bytesToParse || "GET" == requestData.method)){
-        //emit a signal and connect it to the slot below
-        QByteArray response = processRequestData(requestData);
-
-        socket.write(response, response.size());
-
-        socket.disconnectFromHost();
+        emit requestParsed(requestData);
     }
 }
 
@@ -260,8 +260,22 @@ QByteArray HTTPThread::check(const QByteArray &partialResponse,
     return partialResponse + "\r\nYou're not logged in!";;
 }
 
-void HTTPThread::onDisconnect()
+void HTTPThread::onError(QAbstractSocket::SocketError socketError)
 {
-    qDebug() << "Disconnected!";
+    qDebug() << socketError << ": " << socket.errorString();
+
+    //TODO: check the state(){
+        socket.disconnectFromHost();
+    //}
+
+    emit error(socketError);
     quit();
+}
+
+void HTTPThread::onRequestParsed(const RequestData &requestData)
+{
+    QByteArray response = processRequestData(requestData);
+
+    socket.write(response, response.size());
+    socket.disconnectFromHost();
 }
