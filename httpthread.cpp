@@ -19,7 +19,6 @@ HTTPThread::HTTPThread(const int socketDescriptor, const QString &docRoot,
         return;
     }
 
-    qDebug() <<"connects:";
     connect(&socket, SIGNAL(disconnected()), this, SLOT(quit()));
     connect(&socket, SIGNAL(error(QAbstractSocket::SocketError)), this,
             SLOT(onError(QAbstractSocket::SocketError)));
@@ -43,7 +42,7 @@ void HTTPThread::read(){
     int lfPos = request.indexOf("\n\n");
 
     if(!isParsedHeader && (-1 != crlfPos || -1 != lfPos)){
-        qDebug() << "Found delimiter!";
+        isParsedHeader = true;
         requestData = parser.parseRequestHeader(request);
 
         if(-1 != crlfPos){
@@ -52,10 +51,9 @@ void HTTPThread::read(){
         }
 
         bytesToParse = requestData.contentLength;
-        request = request.replace(lf, "").right(request.size()-lfPos-lf.size());
-        isParsedHeader = true;
 
-        qDebug() << "After parsing: " << request;
+        //discard the header from the request
+        request = request.replace(lf, "").right(request.size()-lfPos-lf.size());
     }
 
     if(isParsedHeader && "POST" == requestData.method && !request.isEmpty()){
@@ -67,7 +65,6 @@ void HTTPThread::read(){
         }
 
         bytesToParse -= request.size();
-        qDebug() << "Parsing req body " << request;
         QHash<QString, QString> postData = parser.parsePostBody(request);
 
         if(!postData.isEmpty()){
@@ -78,17 +75,6 @@ void HTTPThread::read(){
 
             request = "";
         }
-
-        qDebug() << "After: " << request;
-
-        qDebug() << "Request data:\n\tMethod: "
-                 << requestData.method << "\n\tUrl: "
-                 << requestData.url << "\n\tProtocol: "
-                 << requestData.protocol << "\n\tVer: "
-                 <<requestData.protocolVersion
-                 << "\n\tFields: " << requestData.fields
-                 << "\n\tContent-Length: " << requestData.contentLength
-                 << "\n\tpost: " << requestData.postData;
     }
 
     if(isParsedHeader &&
@@ -280,6 +266,15 @@ void HTTPThread::onError(QAbstractSocket::SocketError socketError)
 
 void HTTPThread::onRequestParsed(const RequestData &requestData)
 {
+    qDebug() << "Request data:\n\tMethod: "
+             << requestData.method << "\n\tUrl: "
+             << requestData.url << "\n\tProtocol: "
+             << requestData.protocol << "\n\tVer: "
+             <<requestData.protocolVersion
+             << "\n\tFields: " << requestData.fields
+             << "\n\tContent-Length: " << requestData.contentLength
+             << "\n\tpost: " << requestData.postData;
+
     QByteArray response = processRequestData(requestData);
 
     socket.write(response, response.size());
