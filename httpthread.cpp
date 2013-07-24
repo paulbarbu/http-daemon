@@ -259,11 +259,7 @@ QByteArray HTTPThread::check(const QByteArray &partialResponse,
 void HTTPThread::onError(QAbstractSocket::SocketError socketError)
 {
     qDebug() << socketError << ": " << socket.errorString();
-
-    //TODO: check the state(){
-        socket.disconnectFromHost();
-    //}
-
+    socket.disconnectFromHost();
     emit error(socketError);
     quit();
 }
