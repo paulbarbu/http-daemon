@@ -58,8 +58,14 @@ void HTTPThread::read(){
         qDebug() << "After parsing: " << request;
     }
 
-    if(isParsedHeader && "POST" == requestData.method && !request.isEmpty() &&
-            bytesToParse > 0){
+    if(isParsedHeader && "POST" == requestData.method && !request.isEmpty()){
+
+        if(0 >= bytesToParse){
+            //a POST request with no Content-Length is bogus as per standard
+            requestData.valid = false;
+            emit requestParsed(requestData);
+        }
+
         bytesToParse -= request.size();
         qDebug() << "Parsing req body " << request;
         QHash<QString, QString> postData = parser.parsePostBody(request);
