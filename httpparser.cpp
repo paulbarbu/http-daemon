@@ -6,7 +6,7 @@ HTTPParser::HTTPParser()
 {
 
 }
-//TODO: work with QByteArrays
+
 QHash<QString, QString> HTTPParser::parsePostBody(const QString &postBody)
 {
     QHash<QString, QString> retval;

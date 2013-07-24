@@ -97,7 +97,11 @@ QByteArray HTTPThread::processRequestData(const RequestData &requestData)
 
     if("GET" == requestData.method || "POST" == requestData.method){
         //serve static files
-
+        /* TODO:
+         * Metoda de servire a fisierelor statice e cam ineficienta.
+         * Practic incarci tot fisierul in memorie si tot concatenezi array-uri,
+         * cand ai putea sa trimiti direct pe tava pe masura ce citesti.
+         */
         QString fullPath = docRoot + requestData.url.path();
         QFileInfo f(fullPath);
 
