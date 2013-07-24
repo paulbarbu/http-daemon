@@ -8,6 +8,10 @@
 
 struct RequestData
 {
+    RequestData(){
+        contentLength=0;
+    }
+
     QString method;
     QUrl url;
     QString protocol;
