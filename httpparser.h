@@ -12,6 +12,7 @@ struct RequestData
     QUrl url;
     QString protocol;
     double protocolVersion;
+    int contentLength;
 
     QHash<QString, QStringList> fields;
     QHash<QString, QString> postData;
@@ -24,7 +25,7 @@ class HTTPParser
 public:
     HTTPParser();
     QHash<QString, QString> parsePostBody(const QString &postBody);
-    RequestData parseRequest(QString request);
+    RequestData parseRequestHeader(const QString &req);
 };
 
 #endif // HTTPPARSER_H

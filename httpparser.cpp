@@ -26,20 +26,17 @@ QHash<QString, QString> HTTPParser::parsePostBody(const QString &postBody)
     return retval;
 }
 
-RequestData HTTPParser::parseRequest(QString request)
+RequestData HTTPParser::parseRequestHeader(const QString &req)
 {
+    QString request = req;
     RequestData requestData;
     requestData.valid = false;
 
-    QStringList parts = request.replace("\r", "").split("\n\n", QString::SkipEmptyParts);
+    QStringList fields = request.replace("\r", "").split("\n", QString::SkipEmptyParts);
 
-    if(parts.isEmpty()){
+    if(fields.isEmpty()){
         return requestData;
     }
-
-    QStringList fields = parts[0].split("\n", QString::SkipEmptyParts);
-
-    qDebug() << "Fields" << fields;
 
     QStringList statusLine = fields[0].split(" ");
 
@@ -78,23 +75,10 @@ RequestData HTTPParser::parseRequest(QString request)
         requestData.fields["Host"] = requestData.fields["Host"][0].split(":");
     }
 
-
-    if("POST" == requestData.method && 2 == parts.size() &&
-            !parts[1].isEmpty()){
-        requestData.postData = parsePostBody(parts[1]);
-
-        if(requestData.postData.isEmpty()){
-            return requestData;
-        }
+    if(requestData.fields.contains("Content-Length")){
+        requestData.contentLength = requestData.fields["Content-Length"][0].toInt(&ok);
+        requestData.fields.remove("Content-Length");
     }
-
-    qDebug() << "Request data:\n\tStatusLine:\n\t\tMethod: "
-             << requestData.method << "\n\t\tUrl: "
-             << requestData.url << "\n\t\tProtocol: "
-             << requestData.protocol << "\n\t\tVer: "
-             <<requestData.protocolVersion
-             << "\n\tFields: " << requestData.fields
-             << "\n\tpost: " << requestData.postData;
 
     requestData.valid = true;
     return requestData;
