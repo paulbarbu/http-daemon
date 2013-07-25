@@ -14,6 +14,12 @@ HTTPServer::HTTPServer(const QString &docRoot, QObject *parent) :
 void HTTPServer::incomingConnection(int socketDescriptor)
 {
     //TODO: QThreadPool or QtConcurrent
+    //TODO: If I'll be using the QThreadPool way I think I'll need to inherit
+    //from both QObject and QRunnable because QRunnable doesn't have an event
+    //loop since it doesn't inherit QObject -> read more
+    //TODO: With QtConcurrent::run() I think only HTTPConnection::start() will
+    //be called and the slots will be executed on this thread -> test this
+    //-> read more about QtConcurrent
     QThread *t = new QThread;
 
     HTTPConnection *httpConnection = new HTTPConnection(socketDescriptor,
