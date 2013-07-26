@@ -8,10 +8,6 @@
 
 struct RequestData
 {
-    RequestData(){
-        contentLength=0;
-    }
-
     QString method;
     QUrl url;
     QString protocol;
@@ -20,16 +16,33 @@ struct RequestData
 
     QHash<QString, QStringList> fields;
     QHash<QString, QString> postData;
-
-    bool valid;
 };
 
-class HTTPParser
+class HTTPParser : public QObject
 {
+    Q_OBJECT
 public:
-    HTTPParser();
-    QHash<QString, QString> parsePostBody(const QString &postBody);
-    RequestData parseRequestHeader(const QString &req);
+    HTTPParser(QObject *parent=0);
+
+    HTTPParser &operator<<(const QString &chunk);
+    HTTPParser &operator<<(const QByteArray &chunk);
+
+signals:
+    void parsed(const RequestData &requestData);
+    void parseError(const QString &reason);
+
+private:
+    int bytesToParse;
+    QByteArray data;
+    bool isParsedHeader;
+    RequestData requestData;
+
+    //TODO: think if I can use these methods to parse data without using the streams
+    void parsePostData();
+    void parseRequestHeader();
+    void parse();
+
+    void discardRequestHeader();
 };
 
 #endif // HTTPPARSER_H
