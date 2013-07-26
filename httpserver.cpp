@@ -1,8 +1,9 @@
 #include <QDebug>
 #include <QThread>
+#include <QThreadPool>
 
 #include "httpserver.h"
-#include "httpconnection.h"
+#include "httpconnectionmanager.h"
 
 HTTPServer::HTTPServer(const QString &docRoot, QObject *parent) :
     QTcpServer(parent), docRoot(docRoot)
@@ -14,22 +15,13 @@ HTTPServer::HTTPServer(const QString &docRoot, QObject *parent) :
 //TODO: convert everything to C++11
 void HTTPServer::incomingConnection(int socketDescriptor)
 {
-    //TODO: QThreadPool
-    //TODO: If I'll be using the QThreadPool way I think I'll need to inherit
-    //from both QObject and QRunnable because QRunnable doesn't have an event
-    //loop since it doesn't inherit QObject -> read more
+    HTTPConnectionManager *httpConnectionManager =
+            new HTTPConnectionManager(socketDescriptor, docRoot);
 
-    QThread *t = new QThread;
+    connect(httpConnectionManager, SIGNAL(connectionClosed()),
+            httpConnectionManager, SLOT(del()));
 
-    HTTPConnection *httpConnection = new HTTPConnection(socketDescriptor,
-                                                        docRoot);
+    httpConnectionManager->setAutoDelete(false);
 
-    httpConnection->moveToThread(t);
-
-    connect(t, SIGNAL(started()), httpConnection, SLOT(start()));
-    connect(httpConnection, SIGNAL(closed()), t, SLOT(quit()));
-    connect(t, SIGNAL(finished()), httpConnection, SLOT(deleteLater()));
-    connect(t, SIGNAL(finished()), t, SLOT(deleteLater()));
-
-    t->start();
+    QThreadPool::globalInstance()->start(httpConnectionManager);
 }

@@ -8,8 +8,9 @@
 #include "httpconnection.h"
 
 HTTPConnection::HTTPConnection(int socketDescriptor, const QString &docRoot,
-                       QObject *parent) : QObject(parent), socket(this), isParsedHeader(false),
-    docRoot(docRoot), responseStatusLine("HTTP/1.0 %1\r\n")
+                       QObject *parent) : QObject(parent), socket(this),
+    isParsedHeader(false), eventLoop(this), docRoot(docRoot),
+    responseStatusLine("HTTP/1.0 %1\r\n")
 {
     if(!socket.setSocketDescriptor(socketDescriptor)){
         qDebug() << socket.errorString() << "Cannot set sd: " << socketDescriptor;
@@ -19,14 +20,19 @@ HTTPConnection::HTTPConnection(int socketDescriptor, const QString &docRoot,
 
 void HTTPConnection::start()
 {
+    qDebug() << "start() in: " << QThread::currentThread();
     connect(&socket, SIGNAL(error(QAbstractSocket::SocketError)), this,
             SLOT(onError(QAbstractSocket::SocketError)));
     connect(&socket, SIGNAL(readyRead()), this, SLOT(read()));
     connect(this, SIGNAL(requestParsed(RequestData)), this,
             SLOT(onRequestParsed(RequestData)));
+    connect(this, SIGNAL(closed()), &eventLoop, SLOT(quit()));
+
+    eventLoop.exec();
 }
 
 void HTTPConnection::read(){
+    qDebug() << "reead() in: " << QThread::currentThread();
     request.append(QString(socket.readAll()));
 
     QString lf = "\n\n";

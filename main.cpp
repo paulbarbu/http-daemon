@@ -8,6 +8,7 @@
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
+    a.setObjectName("main app");
 
     //TODO: boost::program_args
     QStringList args(a.arguments());
@@ -25,6 +26,8 @@ int main(int argc, char *argv[])
 
     HTTPServer s(docRoot);
     QTextStream out(stdout);
+
+    s.setObjectName("HTTPServer");
 
     if(!s.listen(QHostAddress::LocalHost, 8080)){
         out << "Cannot start the server: " << s.errorString() << endl;

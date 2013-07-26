@@ -2,6 +2,7 @@
 #define HTTPCONNECTION_H
 
 #include <QtNetwork/QTcpSocket>
+#include <QEventLoop>
 
 #include "httpparser.h"
 
@@ -19,6 +20,7 @@ private:
     RequestData requestData;
     bool isParsedHeader;
     int bytesToParse;
+    QEventLoop eventLoop;
 
     const QString docRoot;
     const QString responseStatusLine;

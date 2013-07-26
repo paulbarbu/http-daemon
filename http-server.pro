@@ -17,11 +17,13 @@ TEMPLATE = app
 SOURCES += main.cpp \
     httpserver.cpp \
     httpparser.cpp \
-    httpconnection.cpp
+    httpconnection.cpp \
+    httpconnectionmanager.cpp
 
 HEADERS += \
     httpserver.h \
     httpparser.h \
-    httpconnection.h
+    httpconnection.h \
+    httpconnectionmanager.h
 
 OTHER_FILES +=
