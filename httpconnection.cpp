@@ -7,6 +7,29 @@
 
 #include "httpconnection.h"
 
+/*TODO: refactor
+Creezi doua clase model, HTTPRequest, HTTPResponse ce contin informatiile
+primite/de trimis catre client. De exemplu metoda, versiunea, content length,
+cookie-uri, etc. Query-ul, de exemplu ar fi stocat frumos sub forma de perechi
+cheie-valoare. Cele doua clase ar contine si cate un stream pentru citire
+respectiv scriere. Creezi o clasa HTTPRequestParser ce ar avea rolul de a citi
+informatiile primite prin socket si de a crea o clasa HTTPRequest
+corespunzatoare. Stream-ul la care va face referire aceasta clase va permite
+citirea ulterioara a informatiilor in cazul unui POST de exemplu.
+Dupa ce ai obtinut un HTTPRequest, il dai mai departe catre o instanta a unei
+noi clase, sa-i zicem Dispatcher, ce verifica ce este cerut defapt si, pe baza
+unor reguli, returneaza o referinta spre un HTTPRequestHandler.
+HTTPRequestHandler-ul ales va primi apoi cererea si va returna un raspuns,
+HTTPResponse. Din stream-ul mentionat in acesta, se vor citi datele pe care
+serverul le va trimite inapoi, spre client. Exemple de HTTPRequestHandler ar fi
+FileHTTPRequestHandler ce serveste static un fisier aflat pe disc, sau diverse
+clase ce ar reprezenta aplicatii custom gen cea necesara pentru /patrat. Astfel
+de aplicatii ar putea fi stocate si in DLL-uri, ele fiind destul de
+independente. Treaba lor ar fi astfel doar de a returna un raspuns la o cerere,
+neinteresandu-le cum citesti tu din socket, sau cum gestionezi 1000 de conexiuni
+simultane.
+*/
+
 HTTPConnection::HTTPConnection(int socketDescriptor, const QString &docRoot,
                        QObject *parent) : QObject(parent), socket(this),
     isParsedHeader(false), eventLoop(this), docRoot(docRoot),
@@ -85,7 +108,7 @@ QByteArray HTTPConnection::processRequestData(const RequestData &requestData)
 {
     //TODO: add support for different Host values?
     //TODO: URL rewriting?
-    //TODO: integrate PHP
+    //TODO: integrate FastCGI
 
     QByteArray response = responseStatusLine.arg("200 OK").toUtf8();
 
@@ -95,11 +118,10 @@ QByteArray HTTPConnection::processRequestData(const RequestData &requestData)
 
     if("GET" == requestData.method || "POST" == requestData.method){
         //serve static files
-        /* TODO:
-         * Metoda de servire a fisierelor statice e cam ineficienta.
-         * Practic incarci tot fisierul in memorie si tot concatenezi array-uri,
-         * cand ai putea sa trimiti direct pe tava pe masura ce citesti.
+        /* TODO: optimize the sending of static files (don't load the whole
+         * thing in memory)
          */
+
         QString fullPath = docRoot + requestData.url.path();
         QFileInfo f(fullPath);
 
@@ -118,16 +140,6 @@ QByteArray HTTPConnection::processRequestData(const RequestData &requestData)
                 }
             }
         }
-
-        /* TODO: load things via a common interface from .so and .dll files?
-         * -> evolve this into FastCGI? read more
-         *
-         * or at least create a mapping of path -> method
-         *
-         * What's below isn't good because I have to modify the daemon every
-         * time I want new functionality and the "login", "check", etc.
-         * methods are not a semantic part of HTTPThread
-         */
         else if("/patrat" == requestData.url.path()){
             response = square(response, requestData);
         }
