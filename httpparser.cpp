@@ -62,8 +62,15 @@ RequestData HTTPParser::parseRequestHeader(const QString &req)
         return requestData;
     }
 
-    requestData.method = statusLine[0];
+
     requestData.url.setUrl(statusLine[1]);
+
+    if(!requestData.url.isValid()){
+        qDebug() << "URL NOT VALID!";
+        return requestData;
+    }
+
+    requestData.method = statusLine[0];
     requestData.protocol = protocol[0];
     requestData.protocolVersion = ver;
 
