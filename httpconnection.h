@@ -14,17 +14,15 @@ public:
                         QObject *parent=0);
 
 private:
-    QString request;
     QTcpSocket socket;
     HTTPParser parser;
     RequestData requestData;
-    bool isParsedHeader;
-    int bytesToParse;
     QEventLoop eventLoop;
 
     const QString docRoot;
     const QString responseStatusLine;
 
+    void close();
     QByteArray processRequestData(const RequestData &requestData);
     QByteArray serveStaticFile(const QByteArray &partialResponse,
                                const QString &filePath);
@@ -40,6 +38,10 @@ private:
 signals:
     void closed();
     void requestParsed(const RequestData &requestData);
+
+private slots:
+    void onParseError(const QString &reason);
+
 public slots:
     void start();
     void onError(QAbstractSocket::SocketError socketError);

@@ -32,8 +32,7 @@ simultane.
 
 HTTPConnection::HTTPConnection(int socketDescriptor, const QString &docRoot,
                        QObject *parent) : QObject(parent), socket(this),
-    isParsedHeader(false), eventLoop(this), docRoot(docRoot),
-    responseStatusLine("HTTP/1.0 %1\r\n")
+    eventLoop(this), docRoot(docRoot), responseStatusLine("HTTP/1.0 %1\r\n")
 {
     if(!socket.setSocketDescriptor(socketDescriptor)){
         qDebug() << socket.errorString() << "Cannot set sd: " << socketDescriptor;
@@ -41,67 +40,33 @@ HTTPConnection::HTTPConnection(int socketDescriptor, const QString &docRoot,
     }
 }
 
+void HTTPConnection::close()
+{
+    socket.disconnectFromHost();
+    socket.waitForDisconnected(1000);
+    emit closed();
+}
+
 void HTTPConnection::start()
 {
-    qDebug() << "start() in: " << QThread::currentThread();
     connect(&socket, SIGNAL(error(QAbstractSocket::SocketError)), this,
             SLOT(onError(QAbstractSocket::SocketError)));
+
     connect(&socket, SIGNAL(readyRead()), this, SLOT(read()));
-    connect(this, SIGNAL(requestParsed(RequestData)), this,
-            SLOT(onRequestParsed(RequestData)));
+
     connect(this, SIGNAL(closed()), &eventLoop, SLOT(quit()));
+
+    connect(&parser, SIGNAL(parseError(QString)), this,
+            SLOT(onParseError(QString)));
+
+    connect(&parser, SIGNAL(parsed(RequestData)), this,
+            SLOT(onRequestParsed(RequestData)));
 
     eventLoop.exec();
 }
 
 void HTTPConnection::read(){
-    qDebug() << "reead() in: " << QThread::currentThread();
-    request.append(QString(socket.readAll()));
-
-    QString lf = "\n\n";
-    int crlfPos = request.indexOf("\r\n\r\n");
-    int lfPos = request.indexOf("\n\n");
-
-    if(!isParsedHeader && (-1 != crlfPos || -1 != lfPos)){
-        isParsedHeader = true;
-        requestData = parser.parseRequestHeader(request);
-
-        if(-1 != crlfPos){
-            lf = "\r\n\r\n";
-            lfPos = crlfPos;
-        }
-
-        bytesToParse = requestData.contentLength;
-
-        //discard the header from the request
-        request = request.replace(lf, "").right(request.size()-lfPos-lf.size());
-    }
-
-    if(isParsedHeader && "POST" == requestData.method && !request.isEmpty()){
-
-        if(0 >= bytesToParse){
-            //a POST request with no Content-Length is bogus as per standard
-            requestData.valid = false;
-            emit requestParsed(requestData);
-        }
-
-        bytesToParse -= request.size();
-        QHash<QString, QString> postData = parser.parsePostBody(request);
-
-        if(!postData.isEmpty()){
-            QHash<QString, QString>::const_iterator i;
-            for(i = postData.constBegin(); i != postData.constEnd(); ++i){
-                requestData.postData.insert(i.key(), i.value());
-            }
-
-            request = "";
-        }
-    }
-
-    if(isParsedHeader &&
-            (0 == bytesToParse || "GET" == requestData.method)){
-        emit requestParsed(requestData);
-    }
+    parser<<socket.readAll();
 }
 
 QByteArray HTTPConnection::processRequestData(const RequestData &requestData)
@@ -111,10 +76,6 @@ QByteArray HTTPConnection::processRequestData(const RequestData &requestData)
     //TODO: integrate FastCGI
 
     QByteArray response = responseStatusLine.arg("200 OK").toUtf8();
-
-    if(!requestData.valid){
-        return responseStatusLine.arg("400 Bad request\r\n").toAscii();
-    }
 
     if("GET" == requestData.method || "POST" == requestData.method){
         //serve static files
@@ -169,7 +130,7 @@ QByteArray HTTPConnection::processRequestData(const RequestData &requestData)
 QByteArray HTTPConnection::serveStaticFile(const QByteArray &partialResponse,
                                        const QString &filePath)
 {
-    //TODO: set the mime type
+    //TODO: set the mime type - libmagic
     QFile file(filePath);
 
     if(!file.open( QIODevice::ReadOnly)){
@@ -265,12 +226,19 @@ QByteArray HTTPConnection::check(const QByteArray &partialResponse,
     return partialResponse + "\r\nYou're not logged in!";;
 }
 
+void HTTPConnection::onParseError(const QString &reason)
+{
+    QByteArray response = responseStatusLine.arg("400 Bad Request\r\n")
+            .toAscii() + reason.toAscii();
+
+    socket.write(response, response.size());
+    close();
+}
+
 void HTTPConnection::onError(QAbstractSocket::SocketError socketError)
 {
     qDebug() << socketError << ": " << socket.errorString();
-    socket.disconnectFromHost();
-    socket.waitForDisconnected(1000);
-    emit closed();
+    close();
 }
 
 void HTTPConnection::onRequestParsed(const RequestData &requestData)
@@ -287,7 +255,5 @@ void HTTPConnection::onRequestParsed(const RequestData &requestData)
     QByteArray response = processRequestData(requestData);
 
     socket.write(response, response.size());
-    socket.disconnectFromHost();
-    socket.waitForDisconnected(1000);
-    emit closed();
+    close();
 }
