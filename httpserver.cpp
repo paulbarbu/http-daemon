@@ -19,7 +19,7 @@ void HTTPServer::incomingConnection(int socketDescriptor)
             new HTTPConnectionManager(socketDescriptor, docRoot);
 
     connect(httpConnectionManager, SIGNAL(connectionClosed()),
-            httpConnectionManager, SLOT(del()));
+            httpConnectionManager, SLOT(deleteLater()));
 
     httpConnectionManager->setAutoDelete(false);
 

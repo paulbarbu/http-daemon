@@ -15,10 +15,6 @@ public:
 signals:
     void connectionClosed();
 
-
-public slots:
-    void del();
-
 private:
     int socketDescriptor;
     QString docRoot;
