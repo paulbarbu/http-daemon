@@ -37,7 +37,6 @@ private:
     bool isParsedHeader;
     RequestData requestData;
 
-    //TODO: think if I can use these methods to parse data without using the streams
     void parsePostData();
     void parseRequestHeader();
     void parse();

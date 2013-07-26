@@ -9,19 +9,6 @@ HTTPParser::HTTPParser(QObject *parent) : QObject(parent), isParsedHeader(false)
 
 void HTTPParser::parsePostData()
 {
-    /* TODO: better parser for POST, I think I should modify parse(), not this
-     * in order to keep simmetry with parseRequestHeader()
-     *
-     * what if I receive the post data like this:
-
-     foo=ba
-     r&baz
-     =quo
-
-     * use the delimiters (the start, =, & and Content-Length) to detemine when I
-     * should add a key or a val
-     */
-
     if(data.isEmpty()){
         return;
     }
@@ -37,14 +24,11 @@ void HTTPParser::parsePostData()
             return;
         }
 
-        //TODO: URL-decode these
-        requestData.postData.insert(keyVal[0].trimmed(), keyVal[1].trimmed());
+        requestData.postData.insert(QUrl::fromPercentEncoding(keyVal[0].toUtf8()),
+                QUrl::fromPercentEncoding(keyVal[1].toUtf8()));
     }
 
-    if(!pairs.isEmpty()){
-        bytesToParse -= data.size();
-        data = "";
-    }
+    bytesToParse = 0;
 }
 
 void HTTPParser::parseRequestHeader()
@@ -147,13 +131,15 @@ void HTTPParser::parse()
     }
 
     if(isParsedHeader && "POST" == requestData.method){
-        if(0 >= bytesToParse){
+        if(bytesToParse < 0){
             //a POST request with no Content-Length is bogus as per standard
             emit parseError("POST request with erroneous Content-Length field!");
             return;
         }
 
-        parsePostData();
+        if(data.size() == bytesToParse){
+            parsePostData();
+        }
     }
 
     if(isParsedHeader && (0 == bytesToParse || "GET" == requestData.method)){
