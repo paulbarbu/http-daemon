@@ -1,22 +1,10 @@
 #ifndef HTTPPARSER_H
 #define HTTPPARSER_H
 
-#include <QHash>
 #include <QString>
-#include <QUrl>
 #include <QStringList>
 
-struct HTTPRequest
-{
-    QString method;
-    QUrl url;
-    QString protocol;
-    double protocolVersion;
-    int contentLength;
-
-    QHash<QString, QStringList> fields;
-    QHash<QString, QString> postData;
-};
+#include <httprequest.h>
 
 class HTTPParser : public QObject
 {

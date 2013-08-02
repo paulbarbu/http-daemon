@@ -3,7 +3,6 @@
 
 #include <QObject>
 #include <QRunnable>
-#include <QEventLoop>
 
 class HTTPConnectionManager : public QObject, public QRunnable
 {

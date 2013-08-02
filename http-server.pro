@@ -18,12 +18,17 @@ SOURCES += main.cpp \
     httpserver.cpp \
     httpparser.cpp \
     httpconnection.cpp \
-    httpconnectionmanager.cpp
+    httpconnectionmanager.cpp \
+    dispatcher.cpp \
+    httprequesthandler.cpp
 
 HEADERS += \
     httpserver.h \
     httpparser.h \
     httpconnection.h \
-    httpconnectionmanager.h
+    httpconnectionmanager.h \
+    dispatcher.h \
+    httprequest.h \
+    httprequesthandler.h
 
 OTHER_FILES +=
