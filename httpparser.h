@@ -6,7 +6,7 @@
 #include <QUrl>
 #include <QStringList>
 
-struct RequestData
+struct HTTPRequest
 {
     QString method;
     QUrl url;
@@ -28,14 +28,14 @@ public:
     HTTPParser &operator<<(const QByteArray &chunk);
 
 signals:
-    void parsed(const RequestData &requestData);
+    void parsed(const HTTPRequest &requestData);
     void parseError(const QString &reason);
 
 private:
     int bytesToParse;
     QByteArray data;
     bool isParsedHeader;
-    RequestData requestData;
+    HTTPRequest requestData;
 
     void parsePostData();
     void parseRequestHeader();

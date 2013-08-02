@@ -16,28 +16,28 @@ public:
 private:
     QTcpSocket socket;
     HTTPParser parser;
-    RequestData requestData;
+    HTTPRequest requestData;
     QEventLoop eventLoop;
 
     const QString docRoot;
     const QString responseStatusLine;
 
     void close();
-    QByteArray processRequestData(const RequestData &requestData);
+    QByteArray processRequestData(const HTTPRequest &requestData);
     QByteArray serveStaticFile(const QByteArray &partialResponse,
                                const QString &filePath);
     QByteArray serveStaticDir(const QByteArray &partialResponse,
                               const QString &dirPath);
     QByteArray square(const QByteArray &partialResponse,
-                      const RequestData &requestData);
+                      const HTTPRequest &requestData);
     QByteArray login(const QByteArray &partialResponse,
-                     const RequestData &requestData);
+                     const HTTPRequest &requestData);
     QByteArray check(const QByteArray &partialResponse,
-                     const RequestData &requestData);
+                     const HTTPRequest &requestData);
 
 signals:
     void closed();
-    void requestParsed(const RequestData &requestData);
+    void requestParsed(const HTTPRequest &requestData);
 
 private slots:
     void onParseError(const QString &reason);
@@ -45,7 +45,7 @@ private slots:
 public slots:
     void start();
     void onError(QAbstractSocket::SocketError socketError);
-    void onRequestParsed(const RequestData &requestData);
+    void onRequestParsed(const HTTPRequest &requestData);
     void read();
 };
 

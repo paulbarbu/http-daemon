@@ -59,17 +59,17 @@ void HTTPConnection::start()
     connect(&parser, SIGNAL(parseError(QString)), this,
             SLOT(onParseError(QString)));
 
-    connect(&parser, SIGNAL(parsed(RequestData)), this,
-            SLOT(onRequestParsed(RequestData)));
+    connect(&parser, SIGNAL(parsed(HTTPRequest)), this,
+            SLOT(onRequestParsed(HTTPRequest)));
 
     eventLoop.exec();
 }
 
 void HTTPConnection::read(){
-    parser<<socket.readAll();
+    parser << socket.readAll();
 }
 
-QByteArray HTTPConnection::processRequestData(const RequestData &requestData)
+QByteArray HTTPConnection::processRequestData(const HTTPRequest &requestData)
 {
     //TODO: add support for different Host values?
     //TODO: URL rewriting?
@@ -157,7 +157,7 @@ QByteArray HTTPConnection::serveStaticDir(const QByteArray &partialResponse,
 }
 
 QByteArray HTTPConnection::square(const QByteArray &partialResponse,
-                              const RequestData &requestData)
+                              const HTTPRequest &requestData)
 {
     if("GET" != requestData.method || !requestData.url.hasQueryItem("a")){
         return responseStatusLine.arg("400 Bad Request\r\n").toAscii();
@@ -180,7 +180,7 @@ QByteArray HTTPConnection::square(const QByteArray &partialResponse,
 }
 
 QByteArray HTTPConnection::login(const QByteArray &partialResponse,
-                             const RequestData &requestData)
+                             const HTTPRequest &requestData)
 {
     QString page = "\r\n<html><body>"
             "<form method=\"POST\">"
@@ -211,7 +211,7 @@ QByteArray HTTPConnection::login(const QByteArray &partialResponse,
 }
 
 QByteArray HTTPConnection::check(const QByteArray &partialResponse,
-                             const RequestData &requestData)
+                             const HTTPRequest &requestData)
 {
     if("GET" != requestData.method){
         return responseStatusLine.arg("400 Bad request\r\n").toAscii();
@@ -237,20 +237,20 @@ void HTTPConnection::onParseError(const QString &reason)
 
 void HTTPConnection::onError(QAbstractSocket::SocketError socketError)
 {
-    qDebug() << socketError << ": " << socket.errorString();
+    qDebug() << socketError << ":" << socket.errorString();
     close();
 }
 
-void HTTPConnection::onRequestParsed(const RequestData &requestData)
+void HTTPConnection::onRequestParsed(const HTTPRequest &requestData)
 {
-    qDebug() << "Request data:\n\tMethod: "
-             << requestData.method << "\n\tUrl: "
-             << requestData.url << "\n\tProtocol: "
-             << requestData.protocol << "\n\tVer: "
+    qDebug() << "Request data:\n\tMethod:"
+             << requestData.method << "\n\tUrl:"
+             << requestData.url << "\n\tProtocol:"
+             << requestData.protocol << "\n\tVer:"
              <<requestData.protocolVersion
-             << "\n\tFields: " << requestData.fields
-             << "\n\tContent-Length: " << requestData.contentLength
-             << "\n\tpost: " << requestData.postData;
+             << "\n\tFields:" << requestData.fields
+             << "\n\tContent-Length:" << requestData.contentLength
+             << "\n\tpost:" << requestData.postData;
 
     QByteArray response = processRequestData(requestData);
 
