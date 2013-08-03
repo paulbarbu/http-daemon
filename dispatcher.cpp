@@ -3,8 +3,7 @@
 
 #include "dispatcher.h"
 
-Dispatcher::Dispatcher(const HTTPRequest &requestData, const QString &docRoot) :
-    requestData(requestData), docRoot(docRoot)
+Dispatcher::Dispatcher(const QString &docRoot) : docRoot(docRoot)
 {
     /* TODO: use boost's property_tree:
      * http://www.boost.org/doc/libs/1_54_0/doc/html/property_tree.html
@@ -14,7 +13,7 @@ Dispatcher::Dispatcher(const HTTPRequest &requestData, const QString &docRoot) :
     dynamicHandlers.insert("/verifica", "TODO: add handler");
 }
 
-HTTPRequestHandler Dispatcher::getHTTPRequestHandler()
+HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const HTTPRequest &requestData)
 {
     /* TODO: try to find the dynamic/static paths if nothing is found, return a
      * HTTPRequestHandler (not a subclass) that will return a 404 or 403 when
@@ -22,8 +21,8 @@ HTTPRequestHandler Dispatcher::getHTTPRequestHandler()
      */
 
     if("GET" != requestData.method && "POST" != requestData.method){
-        //TODO: properly implement this
-        return responseStatusLine.arg("501 Not Implemented\r\n").toAscii();
+        //TODO: delete!
+        return new HTTPRequestHandler("501 Not Implemented");
     }
 
     if(dynamicHandlers.contains(requestData.url.path())){
@@ -42,15 +41,15 @@ HTTPRequestHandler Dispatcher::getHTTPRequestHandler()
 
 
     if(!f.exists()){
-        //TODO: properly implement this
-        return responseStatusLine.arg("404 Not Found\r\n").toAscii();
+        //TODO: delete!
+        return new HTTPRequestHandler("404 Not Found");
     }
 
     if(!f.isReadable()){
-        //TODO: properly implement this
         qDebug() << "Not readable!";
-        return responseStatusLine.arg("403 Forbidden\r\n").toAscii() +
-                "Permission denied\n";
+
+        //TODO: delete!
+        return new HTTPRequestHandler("403 Forbidden", "Permission denied\n");
     }
 
     if(f.isDir()){
@@ -62,7 +61,7 @@ HTTPRequestHandler Dispatcher::getHTTPRequestHandler()
     return serveStaticFile(response, f.absoluteFilePath());
 }
 
-HTTPRequestHandler Dispatcher::loadModule(QString module)
+HTTPRequestHandler* Dispatcher::loadModule(QString module)
 {
     //TODO: implement this
 }

@@ -9,14 +9,13 @@
 class Dispatcher
 {
 public:
-    Dispatcher(const HTTPRequest &requestData, const QString &docRoot);
-    HTTPRequestHandler getHTTPRequestHandler();
+    Dispatcher(const QString &docRoot);
+    HTTPRequestHandler *getHTTPRequestHandler(const HTTPRequest &requestData);
 private:
     QHash<QString, QString> dynamicHandlers;
-    HTTPRequest requestData;
     const QString docRoot;
 
-    HTTPRequestHandler loadModule(QString module);
+    HTTPRequestHandler *loadModule(QString module);
 };
 
 #endif // DISPATCHER_H
