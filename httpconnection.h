@@ -16,18 +16,12 @@ public:
 private:
     QTcpSocket socket;
     HTTPParser parser;
-    HTTPRequest requestData;
     QEventLoop eventLoop;
 
     const QString docRoot;
-    const QString responseStatusLine;
 
     void close();
     QByteArray processRequestData(const HTTPRequest &requestData);
-    QByteArray serveStaticFile(const QByteArray &partialResponse,
-                               const QString &filePath);
-    QByteArray serveStaticDir(const QByteArray &partialResponse,
-                              const QString &dirPath);
     QByteArray square(const QByteArray &partialResponse,
                       const HTTPRequest &requestData);
     QByteArray login(const QByteArray &partialResponse,
@@ -37,7 +31,6 @@ private:
 
 signals:
     void closed();
-    void requestParsed(const HTTPRequest &requestData);
 
 private slots:
     void onParseError(const QString &reason);
