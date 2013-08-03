@@ -1,3 +1,5 @@
+#include <QDebug>
+
 #include "httpresponse.h"
 
 HTTPResponse::HTTPResponse() : statusCode(0)

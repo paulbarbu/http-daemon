@@ -73,6 +73,7 @@ void HTTPConnection::processRequestData(const HTTPRequest &requestData)
         response.setReasonPhrase("Not Implemented");
 
         write(response);
+        close();
     }
 
     Dispatcher dispatcher(docRoot);
