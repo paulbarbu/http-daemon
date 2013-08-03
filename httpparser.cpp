@@ -48,6 +48,12 @@ void HTTPParser::parseRequestHeader()
         return;
     }
 
+    if("GET" != statusLine[0] && "POST" != statusLine[0] &&
+            "HEAD" != statusLine[0]){
+        emit parseError("Invalid method!");
+        return;
+    }
+
     if(statusLine[1].isEmpty()){
         emit parseError("Path cannot be empty!");
         return;
@@ -142,7 +148,8 @@ void HTTPParser::parse()
         }
     }
 
-    if(isParsedHeader && (0 == bytesToParse || "GET" == requestData.method)){
+    if(isParsedHeader && (0 == bytesToParse || "GET" == requestData.method ||
+                          "HEAD" == requestData.method)){
         emit parsed(requestData);
     }
 }
