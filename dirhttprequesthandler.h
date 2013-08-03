@@ -11,7 +11,7 @@ class DirHTTPRequestHandler : public HTTPRequestHandler
 {
 public:
     DirHTTPRequestHandler(const QString &path);
-    HTTPResponse getResponse();
+    void createResponse();
 
 private:
     QDir dir;

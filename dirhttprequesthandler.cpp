@@ -7,7 +7,7 @@ DirHTTPRequestHandler::DirHTTPRequestHandler(const QString &path) :
 {
 }
 
-HTTPResponse DirHTTPRequestHandler::getResponse()
+void DirHTTPRequestHandler::createResponse()
 {
     HTTPResponse response;
 
@@ -15,7 +15,10 @@ HTTPResponse DirHTTPRequestHandler::getResponse()
         response.setStatusCode(404);
         response.setReasonPhrase("Not Found");
 
-        return response;
+        emit responseWritten(response);
+        emit endOfWriting();
+
+        return;
     }
 
     if(!fileInfo.isReadable()){
@@ -25,7 +28,10 @@ HTTPResponse DirHTTPRequestHandler::getResponse()
         response.setReasonPhrase("Forbidden");
         response.setBody("Permission denied\n");
 
-        return response;
+        emit responseWritten(response);
+        emit endOfWriting();
+
+        return;
     }
 
     QStringList dirList = dir.entryList();
@@ -34,7 +40,9 @@ HTTPResponse DirHTTPRequestHandler::getResponse()
         response.setStatusCode(404);
         response.setReasonPhrase("Not Found");
 
-        return response;
+        emit responseWritten(response);
+        emit endOfWriting();
+
     }
 
     //TODO: format as HTML
@@ -43,5 +51,6 @@ HTTPResponse DirHTTPRequestHandler::getResponse()
     response.setHeaderField("Content-Type", "text/plain");
     response.setBody(dirList.join("\n"));
 
-    return response;
+    emit responseWritten(response);
+    emit endOfWriting();
 }

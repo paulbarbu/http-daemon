@@ -38,7 +38,7 @@ void HTTPConnection::start()
             SLOT(onParseError(QString)));
 
     connect(&parser, SIGNAL(parsed(HTTPRequest)), this,
-            SLOT(onRequestParsed(HTTPRequest)));
+            SLOT(processRequestData(HTTPRequest)));
 
     eventLoop.exec();
 }
@@ -47,8 +47,24 @@ void HTTPConnection::read(){
     parser << socket.readAll();
 }
 
-QByteArray HTTPConnection::processRequestData(const HTTPRequest &requestData)
+void HTTPConnection::write(HTTPResponse response)
 {
+    QByteArray partialResponse = response.getPartial();
+
+    socket.write(partialResponse, partialResponse.size());
+}
+
+void HTTPConnection::processRequestData(const HTTPRequest &requestData)
+{
+    qDebug() << "Request data:\n\tMethod:"
+             << requestData.method << "\n\tUrl:"
+             << requestData.url << "\n\tProtocol:"
+             << requestData.protocol << "\n\tVer:"
+             <<requestData.protocolVersion
+             << "\n\tFields:" << requestData.fields
+             << "\n\tContent-Length:" << requestData.contentLength
+             << "\n\tpost:" << requestData.postData;
+
     //TODO: integrate FastCGI
 
     if("GET" != requestData.method && "POST" != requestData.method){
@@ -56,18 +72,24 @@ QByteArray HTTPConnection::processRequestData(const HTTPRequest &requestData)
         response.setStatusCode(501);
         response.setReasonPhrase("Not Implemented");
 
-        return response.getResponseData();
+        write(response);
     }
 
     Dispatcher dispatcher(docRoot);
 
-    HTTPRequestHandler *requestHandler = dispatcher.getHTTPRequestHandler(requestData);
+    HTTPRequestHandler *requestHandler =
+            dispatcher.getHTTPRequestHandler(requestData);
 
-    HTTPResponse response = requestHandler->getResponse();
+    connect(requestHandler, SIGNAL(endOfWriting()), requestHandler,
+            SLOT(deleteLater()));
 
-    delete requestHandler;
+    connect(requestHandler, SIGNAL(endOfWriting()), this,
+            SLOT(close()));
 
-    return response.getResponseData();
+    connect(requestHandler, SIGNAL(responseWritten(HTTPResponse)), this,
+            SLOT(write(HTTPResponse)));
+
+    requestHandler->createResponse();
 
 //        else if("/patrat" == requestData.url.path()){
 //            response = square(response, requestData);
@@ -157,33 +179,13 @@ void HTTPConnection::onParseError(const QString &reason)
     response.setReasonPhrase("Bad Request");
     response.setBody(reason);
 
-    QByteArray responseData = response.getResponseData();
+    write(response);
 
-    socket.write(responseData, responseData.size());
     close();
 }
 
 void HTTPConnection::onError(QAbstractSocket::SocketError socketError)
 {
     qDebug() << socketError << ":" << socket.errorString();
-    close();
-}
-
-void HTTPConnection::onRequestParsed(const HTTPRequest &requestData)
-{
-    qDebug() << "Request data:\n\tMethod:"
-             << requestData.method << "\n\tUrl:"
-             << requestData.url << "\n\tProtocol:"
-             << requestData.protocol << "\n\tVer:"
-             <<requestData.protocolVersion
-             << "\n\tFields:" << requestData.fields
-             << "\n\tContent-Length:" << requestData.contentLength
-             << "\n\tpost:" << requestData.postData;
-
-    QByteArray response = processRequestData(requestData);
-
-    qDebug() << "Response:\n" << response;
-
-    socket.write(response, response.size());
     close();
 }

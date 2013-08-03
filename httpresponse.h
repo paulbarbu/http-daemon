@@ -9,22 +9,28 @@ class HTTPResponse
 {
 public:
     HTTPResponse();
-    bool setStatusCode(int value); //TODO: replace with an enum
+    bool setStatusCode(unsigned int value); //TODO: replace with an enum
     void setReasonPhrase(const QString &value);
     void setReasonPhrase(const QByteArray &value);
     void setReasonPhrase(const char *value);
     void setBody(const QString &value);
     void setBody(const QByteArray &value);
     void setBody(const char *value);
+    void appendBody(const QString &value);
+    void appendBody(const QByteArray &value);
+    void appendBody(const char *value);
     void setHeaderField(const QString &key, const QString &value);
     void addHeaderFields(const QHash<QString, QString> &value);
-    QByteArray getResponseData();
+    QByteArray get();
+    QByteArray getPartial();
 
 private:
     QString body;
     QString reasonPhrase;
-    int statusCode;
+    unsigned int statusCode;
     QHash<QString, QString> fields;
+
+    bool isValidStatusCode(unsigned int value);
 };
 
 #endif // HTTPRESPONSE_H

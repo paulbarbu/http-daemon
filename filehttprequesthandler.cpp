@@ -6,10 +6,9 @@ FileHTTPRequestHandler::FileHTTPRequestHandler(const QString &path) :
     file(path), fileInfo(path)
 {
     //TODO: set the mime type - libmagic
-    //TODO: don't load the whole thing in memory - use onBytesWritten()
 }
 
-HTTPResponse FileHTTPRequestHandler::getResponse()
+void FileHTTPRequestHandler::createResponse()
 {
     HTTPResponse response;
 
@@ -17,7 +16,10 @@ HTTPResponse FileHTTPRequestHandler::getResponse()
         response.setStatusCode(404);
         response.setReasonPhrase("Not Found");
 
-        return response;
+        emit responseWritten(response);
+        emit endOfWriting();
+
+        return;
     }
 
     if(!fileInfo.isReadable()){
@@ -27,7 +29,10 @@ HTTPResponse FileHTTPRequestHandler::getResponse()
         response.setReasonPhrase("Forbidden");
         response.setBody("Permission denied\n");
 
-        return response;
+        emit responseWritten(response);
+        emit endOfWriting();
+
+        return;
     }
 
     if(!file.open(QIODevice::ReadOnly)){
@@ -35,12 +40,25 @@ HTTPResponse FileHTTPRequestHandler::getResponse()
 
         response.setStatusCode(500);
         response.setReasonPhrase("Internal Server Error");
-        return response;
+
+        emit responseWritten(response);
+        emit endOfWriting();
+
+        return;
     }
 
     response.setStatusCode(200);
     response.setReasonPhrase("OK");
-    response.setBody(file.readAll());
 
-    return response;
+    QByteArray content;
+    content = file.read(1024);
+
+    while(!content.isEmpty()){
+        response.appendBody(content);
+        emit responseWritten(response);
+
+        content = file.read(1024);
+    }
+
+    emit endOfWriting();
 }

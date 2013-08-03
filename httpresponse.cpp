@@ -1,13 +1,12 @@
 #include "httpresponse.h"
 
-HTTPResponse::HTTPResponse()
+HTTPResponse::HTTPResponse() : statusCode(0)
 {
 }
 
-bool HTTPResponse::setStatusCode(int value)
+bool HTTPResponse::setStatusCode(unsigned int value)
 {
-    int firstDigit = value / 100;
-    if(firstDigit < 1 || firstDigit > 5){
+    if(!isValidStatusCode(value)){
         return false;
     }
 
@@ -26,14 +25,33 @@ void HTTPResponse::setBody(const char *value)
     body = value;
 }
 
+void HTTPResponse::appendBody(const QString &value)
+{
+    body += value;
+}
+
+void HTTPResponse::appendBody(const QByteArray &value)
+{
+    body += value;
+}
+
+void HTTPResponse::appendBody(const char *value)
+{
+    body += value;
+}
+
 void HTTPResponse::setBody(const QByteArray &value)
 {
     body = value;
 }
 
-QByteArray HTTPResponse::getResponseData()
+QByteArray HTTPResponse::get()
 {
     //TODO: memoize the response until a set*() method is called
+
+    if(0 == statusCode || "" == reasonPhrase){
+        return "";
+    }
 
     QString response;
     QString statusLine = "HTTP/1.0 %1 %2\r\n";
@@ -49,6 +67,31 @@ QByteArray HTTPResponse::getResponseData()
     response += "\r\n" + body;
 
     return response.toUtf8();
+}
+
+QByteArray HTTPResponse::getPartial()
+{
+    QByteArray response = get();
+
+    if( "" == response){
+        response += body;
+    }
+
+    statusCode = 0;
+    reasonPhrase = "";
+    body = "";
+
+    return response;
+}
+
+bool HTTPResponse::isValidStatusCode(unsigned int value)
+{
+    int firstDigit = value / 100;
+    if(firstDigit >= 1 && firstDigit <= 5){
+        return true;
+    }
+
+    return false;
 }
 
 void HTTPResponse::setReasonPhrase(const QString &value)

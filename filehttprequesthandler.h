@@ -12,7 +12,7 @@ class FileHTTPRequestHandler : public HTTPRequestHandler
 {
 public:
     FileHTTPRequestHandler(const QString &path);
-    HTTPResponse getResponse();
+    void createResponse();
 
 private:
     QFile file;

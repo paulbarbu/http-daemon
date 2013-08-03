@@ -5,6 +5,7 @@
 #include <QEventLoop>
 
 #include "httpparser.h"
+#include "httpresponse.h"
 
 class HTTPConnection : public QObject
 {
@@ -20,8 +21,6 @@ private:
 
     const QString docRoot;
 
-    void close();
-    QByteArray processRequestData(const HTTPRequest &requestData);
     QByteArray square(const QByteArray &partialResponse,
                       const HTTPRequest &requestData);
     QByteArray login(const QByteArray &partialResponse,
@@ -38,8 +37,10 @@ private slots:
 public slots:
     void start();
     void onError(QAbstractSocket::SocketError socketError);
-    void onRequestParsed(const HTTPRequest &requestData);
+    void processRequestData(const HTTPRequest &requestData);
     void read();
+    void write(HTTPResponse response);
+    void close();
 };
 
 #endif // HTTPTHREAD_H
