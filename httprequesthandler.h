@@ -6,7 +6,7 @@
 class HTTPRequestHandler
 {
 public:
-    virtual ~HTTPRequestHandler();
+    virtual ~HTTPRequestHandler() {}
     virtual HTTPResponse getResponse()=0;
 };
 
