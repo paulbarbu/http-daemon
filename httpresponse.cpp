@@ -10,14 +10,14 @@ bool HTTPResponse::setStatusCode(unsigned int value)
         return false;
     }
 
-    statusCode = value;
+    statusCode = QByteArray::number(value);
 
     return true;
 }
 
 void HTTPResponse::setBody(const QString &value)
 {
-    body = value;
+    body = value.toUtf8();
 }
 
 void HTTPResponse::setBody(const char *value)
@@ -49,36 +49,34 @@ QByteArray HTTPResponse::get()
 {
     //TODO: memoize the response until a set*() method is called
 
-    if(0 == statusCode || "" == reasonPhrase){
+    if("" == statusCode || "" == reasonPhrase){
         return "";
     }
 
-    QString response;
-    QString statusLine = "HTTP/1.0 %1 %2\r\n";
-    QString headerPattern = "%1: %2\r\n";
+    QByteArray response = "HTTP/1.0 " + statusCode + " " + reasonPhrase + "\r\n";
 
-    response = statusLine.arg(QString::number(statusCode), reasonPhrase);
-
-    QHash<QString, QString>::const_iterator i;
+    QHash<QByteArray, QByteArray>::const_iterator i;
     for(i = fields.constBegin(); i != fields.constEnd(); ++i){
-        response += headerPattern.arg(i.key(), i.value());
+        response += i.key() + ": " + i.value() + "\r\n";
     }
 
     response += "\r\n" + body;
 
-    return response.toUtf8();
+    return response;
 }
 
 QByteArray HTTPResponse::getPartial()
 {
     QByteArray response = get();
 
-    if( "" == response){
+    if("" == response){
         response += body;
     }
+    else{
+        statusCode = 0;
+        reasonPhrase = "";
+    }
 
-    statusCode = 0;
-    reasonPhrase = "";
     body = "";
 
     return response;
@@ -96,7 +94,7 @@ bool HTTPResponse::isValidStatusCode(unsigned int value)
 
 void HTTPResponse::setReasonPhrase(const QString &value)
 {
-    reasonPhrase = value;
+    reasonPhrase = value.toUtf8();
 }
 
 void HTTPResponse::setReasonPhrase(const char *value)
@@ -106,7 +104,7 @@ void HTTPResponse::setReasonPhrase(const char *value)
 
 void HTTPResponse::setHeaderField(const QString &key, const QString &value)
 {
-    fields.insert(key, value);
+    fields.insert(key.toUtf8(), value.toUtf8());
 }
 
 void HTTPResponse::addHeaderFields(const QHash<QString, QString> &value)

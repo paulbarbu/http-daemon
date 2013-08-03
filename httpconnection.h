@@ -39,7 +39,7 @@ public slots:
     void onError(QAbstractSocket::SocketError socketError);
     void processRequestData(const HTTPRequest &requestData);
     void read();
-    void write(HTTPResponse response);
+    void write(HTTPResponse &response);
     void close();
 };
 

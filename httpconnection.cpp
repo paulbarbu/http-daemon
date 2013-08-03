@@ -47,7 +47,7 @@ void HTTPConnection::read(){
     parser << socket.readAll();
 }
 
-void HTTPConnection::write(HTTPResponse response)
+void HTTPConnection::write(HTTPResponse &response)
 {
     QByteArray partialResponse = response.getPartial();
 
@@ -86,8 +86,8 @@ void HTTPConnection::processRequestData(const HTTPRequest &requestData)
     connect(requestHandler, SIGNAL(endOfWriting()), this,
             SLOT(close()));
 
-    connect(requestHandler, SIGNAL(responseWritten(HTTPResponse)), this,
-            SLOT(write(HTTPResponse)));
+    connect(requestHandler, SIGNAL(responseWritten(HTTPResponse&)), this,
+            SLOT(write(HTTPResponse&)));
 
     requestHandler->createResponse();
 

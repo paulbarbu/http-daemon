@@ -13,7 +13,7 @@ public:
     virtual void createResponse()=0;
 
  signals:
-    void responseWritten(HTTPResponse response);
+    void responseWritten(HTTPResponse &response);
     void endOfWriting();
 };
 

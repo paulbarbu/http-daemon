@@ -25,10 +25,10 @@ public:
     QByteArray getPartial();
 
 private:
-    QString body;
-    QString reasonPhrase;
-    unsigned int statusCode;
-    QHash<QString, QString> fields;
+    QByteArray body;
+    QByteArray reasonPhrase;
+    QByteArray statusCode;
+    QHash<QByteArray, QByteArray> fields;
 
     bool isValidStatusCode(unsigned int value);
 };
