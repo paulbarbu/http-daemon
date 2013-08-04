@@ -8,10 +8,6 @@ class HTTPServer : public QTcpServer
     Q_OBJECT
 public:
     explicit HTTPServer(const QString &docRoot, QObject *parent = 0);
-    
-signals:
-    
-public slots:
 
 private:
     void incomingConnection(int socketDescriptor);
