@@ -33,3 +33,14 @@ HEADERS += \
     dirhttprequesthandler.h
 
 OTHER_FILES +=
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../build-http-daemon-components-Desktop-Debug/release/ -lhttp-daemon-components
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../build-http-daemon-components-Desktop-Debug/debug/ -lhttp-daemon-components
+else:unix: LIBS += -L$$PWD/../build-http-daemon-components-Desktop-Debug/ -lhttp-daemon-components
+
+INCLUDEPATH += $$PWD/../http-daemon-components
+DEPENDPATH += $$PWD/../http-daemon-components
+
+win32:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../build-http-daemon-components-Desktop-Debug/release/http-daemon-components.lib
+else:win32:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../build-http-daemon-components-Desktop-Debug/debug/http-daemon-components.lib
+else:unix: PRE_TARGETDEPS += $$PWD/../build-http-daemon-components-Desktop-Debug/libhttp-daemon-components.a
