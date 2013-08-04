@@ -74,12 +74,23 @@ void HTTPConnection::processRequestData(const HTTPRequest &requestData)
 
         write(response);
         close();
+        return;
     }
 
     Dispatcher dispatcher(docRoot);
 
     HTTPRequestHandler *requestHandler =
             dispatcher.getHTTPRequestHandler(requestData);
+
+    if(NULL == requestHandler){
+        HTTPResponse response;
+        response.setStatusCode(500);
+        response.setReasonPhrase("Internal Server Error");
+
+        write(response);
+        close();
+        return;
+    }
 
     connect(requestHandler, SIGNAL(endOfWriting()), requestHandler,
             SLOT(deleteLater()));
