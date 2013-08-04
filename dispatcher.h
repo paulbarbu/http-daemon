@@ -14,8 +14,9 @@ public:
 private:
     QHash<QString, QString> dynamicHandlers;
     const QString docRoot;
+    QString pluginRoot; //TODO: boost::program_args
 
-    HTTPRequestHandler *loadModule(QString module);
+    HTTPRequestHandler *loadPlugin(const QString &plugin, const HTTPRequest &requestData);
 };
 
 #endif // DISPATCHER_H
