@@ -1,33 +1,20 @@
 #include <QDebug>
 #include <QFileInfo>
 #include <QPluginLoader>
-#include <QCoreApplication>
 
 #include "dispatcher.h"
 #include "iplugin.h"
 #include "filehttprequesthandler.h"
 #include "dirhttprequesthandler.h"
 
-Dispatcher::Dispatcher(const QString &docRoot) : docRoot(docRoot)
+Dispatcher::Dispatcher(const QString &docRoot, const QString &pluginRoot) :
+    docRoot(docRoot), pluginRoot(pluginRoot)
 {
     /* TODO: use boost's property_tree:
      * http://www.boost.org/doc/libs/1_54_0/doc/html/property_tree.html
      */
     dynamicHandlers.insert("/square", "libsquareplugin.so");
     dynamicHandlers.insert("/login", "libloginplugin.so");
-
-    //TODO: boost::program_args
-    QStringList args(QCoreApplication::arguments());
-    int pos = args.indexOf("--pluginroot");
-    pluginRoot = "./plugins";
-
-    if(-1 != pos){
-        QFileInfo f(args[pos+1]);
-
-        if(f.isReadable()){
-            pluginRoot = f.absoluteFilePath();
-        }
-    }
 }
 
 HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const HTTPRequest &requestData)

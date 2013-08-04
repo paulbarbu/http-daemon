@@ -9,12 +9,12 @@
 class Dispatcher
 {
 public:
-    Dispatcher(const QString &docRoot);
+    Dispatcher(const QString &docRoot,const QString &pluginRoot);
     HTTPRequestHandler *getHTTPRequestHandler(const HTTPRequest &requestData);
 private:
     QHash<QString, QString> dynamicHandlers;
     const QString docRoot;
-    QString pluginRoot; //TODO: boost::program_args
+    const QString pluginRoot;
 
     HTTPRequestHandler *loadPlugin(const QString &plugin, const HTTPRequest &requestData);
 };

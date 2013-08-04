@@ -12,7 +12,7 @@ class HTTPConnection : public QObject
     Q_OBJECT
 public:
     explicit HTTPConnection(int socketDescriptor, const QString &docRoot,
-                        QObject *parent=0);
+                            const QString &pluginRoot, QObject *parent=0);
 
 private:
     QTcpSocket socket;
@@ -20,6 +20,7 @@ private:
     QEventLoop eventLoop;
 
     const QString docRoot;
+    const QString pluginRoot;
 
     QByteArray square(const QByteArray &partialResponse,
                       const HTTPRequest &requestData);

@@ -9,8 +9,12 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     a.setObjectName("main app");
+    QTextStream out(stdout);
 
-    //TODO: boost::program_args
+    /*TODO: if I won't use boost::program_args here then I should do something
+     *with the arguments since I don't like passing them all the way through
+     *every class in the app
+     */
     QStringList args(a.arguments());
 
     int pos = args.indexOf("--docroot");
@@ -24,8 +28,29 @@ int main(int argc, char *argv[])
         }
     }
 
-    HTTPServer s(docRoot);
-    QTextStream out(stdout);
+    pos = args.indexOf("--pluginroot");
+    QString pluginRoot;
+    QString pluginRootError = "Please provide a readable path to the directory"
+            " that holds the plugins using the --pluginroot argument!";
+
+    if(-1 == pos){
+        out << pluginRootError << endl;
+
+        return a.exec();
+    }
+
+    QFileInfo f(args[pos+1]);
+
+    if(f.isReadable()){
+        pluginRoot = f.absoluteFilePath();
+    }
+    else{
+        out << pluginRootError << endl;
+
+        return a.exec();
+    }
+
+    HTTPServer s(docRoot, pluginRoot);
 
     s.setObjectName("HTTPServer");
 
@@ -35,7 +60,8 @@ int main(int argc, char *argv[])
     else{
         out << "Listening on " << s.serverAddress().toString() << ":"
             << s.serverPort() << endl;
-        out << "Document root is in: " << docRoot << endl;
+        out << "Document root is in: " << docRoot << endl
+            << "Plugin root is in: " << pluginRoot << endl;
     }
 
     return a.exec();

@@ -8,7 +8,8 @@ class HTTPConnectionManager : public QObject, public QRunnable
 {
     Q_OBJECT
 public:
-    HTTPConnectionManager(int descriptor, QString docRoot, QObject *parent=0);
+    HTTPConnectionManager(int descriptor, const QString &docRoot,
+                          const QString &pluginRoot, QObject *parent=0);
     void run();
 
 signals:
@@ -16,7 +17,8 @@ signals:
 
 private:
     int socketDescriptor;
-    QString docRoot;
+    const QString docRoot;
+    const QString pluginRoot;
 };
 
 #endif // HTTPCONNECTIONMANAGER_H
