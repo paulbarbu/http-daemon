@@ -20,7 +20,6 @@ SOURCES += main.cpp \
     httpconnection.cpp \
     httpconnectionmanager.cpp \
     dispatcher.cpp \
-    httpresponse.cpp \
     filehttprequesthandler.cpp \
     dirhttprequesthandler.cpp
 
@@ -30,9 +29,6 @@ HEADERS += \
     httpconnection.h \
     httpconnectionmanager.h \
     dispatcher.h \
-    httprequest.h \
-    httprequesthandler.h \
-    httpresponse.h \
     filehttprequesthandler.h \
     dirhttprequesthandler.h
 
