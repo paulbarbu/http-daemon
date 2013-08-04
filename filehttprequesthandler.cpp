@@ -2,10 +2,11 @@
 
 #include "filehttprequesthandler.h"
 
-FileHTTPRequestHandler::FileHTTPRequestHandler(const QString &path) :
-    file(path), fileInfo(path)
+FileHTTPRequestHandler::FileHTTPRequestHandler(const HTTPRequest &r, const QString &path) :
+    HTTPRequestHandler(r), file(path), fileInfo(path)
 {
     //TODO: set the mime type - libmagic
+    requestData = r;
 }
 
 void FileHTTPRequestHandler::createResponse()

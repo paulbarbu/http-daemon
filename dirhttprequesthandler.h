@@ -10,7 +10,7 @@
 class DirHTTPRequestHandler : public HTTPRequestHandler
 {
 public:
-    DirHTTPRequestHandler(const QString &path);
+    DirHTTPRequestHandler(const HTTPRequest &r, const QString &path);
     void createResponse();
 
 private:

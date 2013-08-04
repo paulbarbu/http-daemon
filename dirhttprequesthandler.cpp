@@ -2,9 +2,10 @@
 
 #include "dirhttprequesthandler.h"
 
-DirHTTPRequestHandler::DirHTTPRequestHandler(const QString &path) :
-    dir(path), fileInfo(path)
+DirHTTPRequestHandler::DirHTTPRequestHandler(const HTTPRequest &r, const QString &path) :
+    HTTPRequestHandler(r), dir(path), fileInfo(path)
 {
+    requestData = r;
 }
 
 void DirHTTPRequestHandler::createResponse()

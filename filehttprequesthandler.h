@@ -11,7 +11,7 @@
 class FileHTTPRequestHandler : public HTTPRequestHandler
 {
 public:
-    FileHTTPRequestHandler(const QString &path);
+    FileHTTPRequestHandler(const HTTPRequest &r, const QString &path);
     void createResponse();
 
 private:

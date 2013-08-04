@@ -27,10 +27,10 @@ HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const HTTPRequest &request
     qDebug() << requestData.method << " " << fullPath;
 
     if(f.isDir()){
-        return new DirHTTPRequestHandler(f.absoluteFilePath());
+        return new DirHTTPRequestHandler(requestData, f.absoluteFilePath());
     }
 
-    return new FileHTTPRequestHandler(f.absoluteFilePath());
+    return new FileHTTPRequestHandler(requestData, f.absoluteFilePath());
 }
 
 HTTPRequestHandler* Dispatcher::loadModule(QString module)
