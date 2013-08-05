@@ -28,18 +28,18 @@ void HTTPConnection::close()
 
 void HTTPConnection::start()
 {
-    connect(&socket, SIGNAL(error(QAbstractSocket::SocketError)), this,
-            SLOT(onError(QAbstractSocket::SocketError)));
-
     connect(&socket, SIGNAL(readyRead()), this, SLOT(read()));
 
-    connect(this, SIGNAL(closed()), &eventLoop, SLOT(quit()));
+    connect(&parser, SIGNAL(parsed(HTTPRequest)), this,
+            SLOT(processRequestData(HTTPRequest)));
+
+    connect(&socket, SIGNAL(error(QAbstractSocket::SocketError)), this,
+            SLOT(onError(QAbstractSocket::SocketError)));
 
     connect(&parser, SIGNAL(parseError(QString)), this,
             SLOT(onParseError(QString)));
 
-    connect(&parser, SIGNAL(parsed(HTTPRequest)), this,
-            SLOT(processRequestData(HTTPRequest)));
+    connect(this, SIGNAL(closed()), &eventLoop, SLOT(quit()));
 
     eventLoop.exec();
 }
@@ -93,14 +93,14 @@ void HTTPConnection::processRequestData(const HTTPRequest &requestData)
         return;
     }
 
-    connect(requestHandler, SIGNAL(endOfWriting()), requestHandler,
-            SLOT(deleteLater()));
+    connect(requestHandler, SIGNAL(responseWritten(HTTPResponse&)), this,
+            SLOT(write(HTTPResponse&)));
 
     connect(requestHandler, SIGNAL(endOfWriting()), this,
             SLOT(close()));
 
-    connect(requestHandler, SIGNAL(responseWritten(HTTPResponse&)), this,
-            SLOT(write(HTTPResponse&)));
+    connect(requestHandler, SIGNAL(endOfWriting()), requestHandler,
+            SLOT(deleteLater()));
 
     requestHandler->createResponse();
 }
