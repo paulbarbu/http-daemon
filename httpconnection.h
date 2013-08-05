@@ -22,13 +22,6 @@ private:
     const QString docRoot;
     const QString pluginRoot;
 
-    QByteArray square(const QByteArray &partialResponse,
-                      const HTTPRequest &requestData);
-    QByteArray login(const QByteArray &partialResponse,
-                     const HTTPRequest &requestData);
-    QByteArray check(const QByteArray &partialResponse,
-                     const HTTPRequest &requestData);
-
 signals:
     void closed();
 

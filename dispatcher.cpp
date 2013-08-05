@@ -17,7 +17,7 @@ Dispatcher::Dispatcher(const QString &docRoot, const QString &pluginRoot) :
     dynamicHandlers.insert("/login", "libloginplugin.so");
 }
 
-HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const HTTPRequest &requestData)
+HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const HTTPRequest &requestData) const
 {
     if(dynamicHandlers.contains(requestData.url.path())){
         return loadPlugin(dynamicHandlers[requestData.url.path()], requestData);
@@ -36,7 +36,7 @@ HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const HTTPRequest &request
 }
 
 HTTPRequestHandler* Dispatcher::loadPlugin(const QString &plugin,
-                                           const HTTPRequest &requestData)
+                                           const HTTPRequest &requestData) const
 {
     QPluginLoader loader(pluginRoot + "/" + plugin);
 

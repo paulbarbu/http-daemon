@@ -44,7 +44,8 @@ void HTTPConnection::start()
     eventLoop.exec();
 }
 
-void HTTPConnection::read(){
+void HTTPConnection::read()
+{
     parser << socket.readAll();
 }
 

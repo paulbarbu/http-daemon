@@ -16,7 +16,7 @@ signals:
     void connectionClosed();
 
 private:
-    int socketDescriptor;
+    const int socketDescriptor;
     const QString docRoot;
     const QString pluginRoot;
 };
