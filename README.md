@@ -4,6 +4,16 @@ Simple HTTP daemon created for learning purposes using Qt and C++.
 
 By no means a production ready or a fully RFC-compilant daemon.
 
+Installation
+============
+The daemon must be linked to the http-daemon-components library
+(provided separately). In order to do this the paths in the project file must
+be changed to point to the header files of the http-daemon-components and to
+the library provided by the same project.
+
+The qmake variables that need to be changed are: `LIBS`, `INCLUDEPATH`,
+`DEPENDPATH` and `PRE_TARGETDEPS`.
+
 License
 =======
 Copyright 2013 Barbu Paul - Gheorghe
