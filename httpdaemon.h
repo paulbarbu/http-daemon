@@ -1,13 +1,13 @@
-#ifndef HTTPSERVER_H
-#define HTTPSERVER_H
+#ifndef HTTPDAEMON_H
+#define HTTPDAEMON_H
 
 #include <QtNetwork/QTcpServer>
 
-class HTTPServer : public QTcpServer
+class HTTPDaemon : public QTcpServer
 {
     Q_OBJECT
 public:
-    explicit HTTPServer(const QString &docRoot, const QString &pluginRoot,
+    explicit HTTPDaemon(const QString &docRoot, const QString &pluginRoot,
                         QObject *parent = 0);
 
 private:
@@ -16,4 +16,4 @@ private:
     const QString pluginRoot;
 };
 
-#endif // HTTPSERVER_H
+#endif // HTTPDAEMON_H

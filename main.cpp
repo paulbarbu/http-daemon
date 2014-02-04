@@ -3,7 +3,7 @@
 #include <QStringList>
 #include <QFileInfo>
 
-#include "httpserver.h"
+#include "httpdaemon.h"
 
 int main(int argc, char *argv[])
 {
@@ -50,11 +50,12 @@ int main(int argc, char *argv[])
         return a.exec();
     }
 
-    HTTPServer s(docRoot, pluginRoot);
+    HTTPDaemon s(docRoot, pluginRoot);
 
     s.setObjectName("HTTPServer");
 
-    if(!s.listen(QHostAddress::LocalHost, 8080)){
+    //parametrize the port
+    if(!s.listen(QHostAddress::LocalHost, 8282)){
         out << "Cannot start the server: " << s.errorString() << endl;
     }
     else{

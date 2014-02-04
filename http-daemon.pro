@@ -8,31 +8,34 @@ QT       += core network
 
 QT       -= gui
 
-TARGET = http-server
+TARGET = http-daemon
 CONFIG   += console
 CONFIG   -= app_bundle
 
 TEMPLATE = app
 
 SOURCES += main.cpp \
-    httpserver.cpp \
-    httpparser.cpp \
-    httpconnection.cpp \
-    httpconnectionmanager.cpp \
-    dispatcher.cpp \
-    filehttprequesthandler.cpp \
-    dirhttprequesthandler.cpp
+	httpparser.cpp \
+	httpconnection.cpp \
+	httpconnectionmanager.cpp \
+	dispatcher.cpp \
+	filehttprequesthandler.cpp \
+	dirhttprequesthandler.cpp \
+	httpdaemon.cpp
 
 HEADERS += \
-    httpserver.h \
-    httpparser.h \
-    httpconnection.h \
-    httpconnectionmanager.h \
-    dispatcher.h \
-    filehttprequesthandler.h \
-    dirhttprequesthandler.h
+	httpparser.h \
+	httpconnection.h \
+	httpconnectionmanager.h \
+	dispatcher.h \
+	filehttprequesthandler.h \
+	dirhttprequesthandler.h \
+	httpdaemon.h
 
 OTHER_FILES +=
+
+#TODO: find a way to link to a more general location, if I move on another machine I won't have to create all the build-* dirs
+#TODO: find a way to move the plugins to their central location without relying on qt creator
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../build-http-daemon-components-Desktop-Debug/release/ -lhttp-daemon-components
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../build-http-daemon-components-Desktop-Debug/debug/ -lhttp-daemon-components
