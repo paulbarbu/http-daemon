@@ -34,6 +34,11 @@ HEADERS += \
 
 OTHER_FILES +=
 
+CONFIG(release, debug|release){
+	DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_WARNING_OUTPUT
+	message("Release mode: No debug or warning messages from Qt")
+}
+
 #TODO: find a way to link to a more general location, if I move on another machine I won't have to create all the build-* dirs
 #TODO: find a way to move the plugins to their central location without relying on qt creator
 
