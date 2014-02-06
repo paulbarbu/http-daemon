@@ -9,37 +9,18 @@
 #include <QFileInfo>
 
 #include "httpdaemon.h"
+#include "logging.h"
 
-//TODO: separate file, port to Qt 4.8
-void qtOutputToLog(QtMsgType type, const QMessageLogContext &context, const QString &m)
-{
-    Q_UNUSED(context); //TODO!
-
-    QByteArray localMsg = m.toLocal8Bit();
-    char *msg = localMsg.data();
-
-    switch(type){
-        case QtDebugMsg:
-            syslog(LOG_DEBUG, "Qt debug: %s", msg);
-            break;
-        case QtWarningMsg:
-            syslog(LOG_WARNING, "Qt warning: %s", msg);
-            break;
-        case QtCriticalMsg:
-            syslog(LOG_CRIT, "Qt critical: %s", msg);
-            break;
-        case QtFatalMsg:
-            syslog(LOG_ALERT, "Qt fatal: %s", msg);
-            abort();
-    }
-}
-
-//TODO: replace syslog with something that accepts and converts QStrings?
 //TODO: test logging on debian (no systemd), windows
 int main(int argc, char *argv[])
 {
     openlog("http-daemon", LOG_ODELAY, LOG_DAEMON);
-    qInstallMessageHandler(qtOutputToLog);
+
+    #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+        qInstallMessageHandler(qtOutputToLog);
+    #else
+        qInstallMsgHandler(qtOutputToLog);
+    #endif
 
     QCoreApplication a(argc, argv);
     a.setObjectName("main app");

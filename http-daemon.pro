@@ -21,7 +21,8 @@ SOURCES += main.cpp \
 	dispatcher.cpp \
 	filehttprequesthandler.cpp \
 	dirhttprequesthandler.cpp \
-	httpdaemon.cpp
+	httpdaemon.cpp \
+    logging.cpp
 
 HEADERS += \
 	httpparser.h \
@@ -30,7 +31,8 @@ HEADERS += \
 	dispatcher.h \
 	filehttprequesthandler.h \
 	dirhttprequesthandler.h \
-	httpdaemon.h
+	httpdaemon.h \
+    logging.h
 
 OTHER_FILES +=
 
