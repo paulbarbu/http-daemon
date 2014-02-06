@@ -1,5 +1,7 @@
 #include <errno.h>
 
+#include <QtGlobal>
+
 #ifndef Q_OS_WIN32
     #include <unistd.h>
     #include <sys/stat.h>

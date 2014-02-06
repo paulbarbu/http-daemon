@@ -1,11 +1,11 @@
+#include "logging.h"
+
 #ifndef Q_OS_WIN32
 #include <syslog.h>
 #endif
 
 #include <QByteArray>
 #include <QString>
-
-#include "logging.h"
 
 #ifdef Q_OS_WIN32
 #include <stdio.h>
