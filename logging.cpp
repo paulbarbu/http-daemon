@@ -1,9 +1,27 @@
+#ifndef Q_OS_WIN32
 #include <syslog.h>
+#endif
 
 #include <QByteArray>
 #include <QString>
 
 #include "logging.h"
+
+#ifdef Q_OS_WIN32
+#include <stdio.h>
+#include <stdarg.h>
+
+void syslog(int priority, const char *format, ...){
+    Q_UNUSED(priority);
+
+    va_list arg_list;
+    va_start(arg_list, format);
+
+    vprintf(format, arg_list);
+
+    va_end(arg_list);
+}
+#endif
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 void qtOutputToLog(QtMsgType type, const QMessageLogContext &context, const QString &m)

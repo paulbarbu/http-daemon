@@ -13,6 +13,7 @@ Dispatcher::Dispatcher(const QString &docRoot, const QString &pluginRoot) :
     /* TODO: use boost's property_tree:
      * http://www.boost.org/doc/libs/1_54_0/doc/html/property_tree.html
      */
+    //TODO: port to windows => squareplugin.dll
     dynamicHandlers.insert("/square", "libsquareplugin.so");
     dynamicHandlers.insert("/login", "libloginplugin.so");
 }

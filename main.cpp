@@ -1,7 +1,10 @@
 #include <errno.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <syslog.h>
+
+#ifndef Q_OS_WIN32
+    #include <unistd.h>
+    #include <sys/stat.h>
+    #include <syslog.h>
+#endif
 
 #include <QCoreApplication>
 #include <QTextStream>
@@ -11,7 +14,6 @@
 #include "httpdaemon.h"
 #include "logging.h"
 
-//TODO: test logging on debian (no systemd), windows
 int main(int argc, char *argv[])
 {
     openlog("http-daemon", LOG_ODELAY, LOG_DAEMON);
@@ -68,6 +70,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+#ifndef Q_OS_WIN32
     pid_t pid = fork();
 
     if(-1 == pid){
@@ -101,6 +104,7 @@ int main(int argc, char *argv[])
     //close(STDIN_FILENO);
     //close(STDOUT_FILENO);
     //close(STDERR_FILENO);
+#endif
 
     HTTPDaemon s(docRoot, pluginRoot);
     s.setObjectName("HTTPDaemon");
