@@ -6,23 +6,21 @@
 #include "iplugin.h"
 #include "filehttprequesthandler.h"
 #include "dirhttprequesthandler.h"
+#include "configuration.h"
 
-Dispatcher::Dispatcher(const QString &docRoot, const QString &pluginRoot) :
-    docRoot(docRoot), pluginRoot(pluginRoot)
+Dispatcher::Dispatcher()
 {
-    /* TODO: use boost's property_tree:
-     * http://www.boost.org/doc/libs/1_54_0/doc/html/property_tree.html
-     */
-    //TODO: port to windows => squareplugin.dll
-    dynamicHandlers.insert("/square", "libsquareplugin.so");
-    dynamicHandlers.insert("/login", "libloginplugin.so");
 }
 
 HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const HTTPRequest &requestData) const
 {
-    if(dynamicHandlers.contains(requestData.url.path())){
-        return loadPlugin(dynamicHandlers[requestData.url.path()], requestData);
+    QHash<QString, QVariant> plugins(Configuration::get("plugins").toHash());
+
+    if(plugins.contains(requestData.url.path())){
+        return loadPlugin(plugins[requestData.url.path()].toString(), requestData);
     }
+
+    const QString docRoot(Configuration::get("documentroot").toString());
 
     QString fullPath = docRoot + requestData.url.path();
     QFileInfo f(fullPath);
@@ -39,6 +37,8 @@ HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const HTTPRequest &request
 HTTPRequestHandler* Dispatcher::loadPlugin(const QString &plugin,
                                            const HTTPRequest &requestData) const
 {
+    const QString pluginRoot(Configuration::get("pluginroot").toString());
+
     QPluginLoader loader(pluginRoot + "/" + plugin);
 
     QObject *p = loader.instance();

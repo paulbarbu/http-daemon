@@ -9,13 +9,9 @@
 class Dispatcher
 {
 public:
-    Dispatcher(const QString &docRoot,const QString &pluginRoot);
+    Dispatcher();
     HTTPRequestHandler *getHTTPRequestHandler(const HTTPRequest &requestData) const;
 private:
-    QHash<QString, QString> dynamicHandlers;
-    const QString docRoot;
-    const QString pluginRoot;
-
     HTTPRequestHandler *loadPlugin(const QString &plugin, const HTTPRequest &requestData) const;
 };
 

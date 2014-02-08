@@ -11,16 +11,12 @@ class HTTPConnection : public QObject
 {
     Q_OBJECT
 public:
-    explicit HTTPConnection(int socketDescriptor, const QString &docRoot,
-                            const QString &pluginRoot, QObject *parent=0);
+    explicit HTTPConnection(int socketDescriptor, QObject *parent=0);
 
 private:
     QTcpSocket socket;
     HTTPParser parser;
     QEventLoop eventLoop;
-
-    const QString docRoot;
-    const QString pluginRoot;
 
 signals:
     void closed();

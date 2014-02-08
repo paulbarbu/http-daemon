@@ -15,6 +15,7 @@
 
 #include "httpdaemon.h"
 #include "logging.h"
+#include "configuration.h"
 
 int main(int argc, char *argv[])
 {
@@ -28,47 +29,23 @@ int main(int argc, char *argv[])
 
     QCoreApplication a(argc, argv);
     a.setObjectName("main app");
+
     QTextStream out(stdout);
     QTextStream err(stderr);
 
-    /*TODO: if I won't use boost::program_args here then I should do something
-     *with the arguments since I don't like passing them all the way through
-     *every class in the app
-     */
-    QStringList args(a.arguments());
+    #ifndef CONFIG_DIR
+        #define CONFIG_DIR "";
+    #endif
 
-    int pos = args.indexOf("--docroot");
-    QString docRoot = "/tmp";
+    Configuration c(CONFIG_DIR CONFIG_FILE_NAME);
 
-    if(-1 != pos){
-        QFileInfo f(args[pos+1]);
-
-        if(f.isReadable()){
-            docRoot = f.absoluteFilePath();
-        }
-    }
-
-    pos = args.indexOf("--pluginroot");
-    QString pluginRoot;
-    QString pluginRootError = "Please provide a readable path to the directory"
-            " that holds the plugins using the --pluginroot argument!";
-
-    if(-1 == pos){
-        err << pluginRootError << endl;
-        syslog(LOG_ERR, pluginRootError.toStdString().c_str());
-
+    if(!c.read()){
+        syslog(LOG_ERR, "Cannot read configuration file at: %s", c.getSettingsPath().toStdString().c_str());
         return 1;
     }
 
-    QFileInfo f(args[pos+1]);
-
-    if(f.isReadable()){
-        pluginRoot = f.absoluteFilePath();
-    }
-    else{
-        err << pluginRootError << endl;
-        syslog(LOG_ERR, pluginRootError.toStdString().c_str());
-
+    if(!c.check()){
+        syslog(LOG_ERR, "Invalid configuration file at: %s", c.getSettingsPath().toStdString().c_str());
         return 1;
     }
 
@@ -89,6 +66,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+    //TODO: become a user (configured via http-daemon.conf)
     umask(0);
     pid_t sid = setsid();
 
@@ -102,24 +80,32 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    //TODO: figure out why if I enable these s.listen will fail
+    //TODO: figure out why if I enable these s.listen will fail, create a POC
     //close(STDIN_FILENO);
     //close(STDOUT_FILENO);
     //close(STDERR_FILENO);
 #endif
 
-    HTTPDaemon s(docRoot, pluginRoot);
+    bool ok;
+    int port = Configuration::get("port", 80).toInt(&ok);
+
+    if(!ok){
+        port = 80;
+    }
+
+    HTTPDaemon s;
     s.setObjectName("HTTPDaemon");
 
-    //TODO: parametrize the port
-    if(!s.listen(QHostAddress::LocalHost, 8282)){
+    if(!s.listen(QHostAddress::LocalHost, port)){
          syslog(LOG_ERR, "Cannot start the server: %s", s.errorString().toStdString().c_str());
          return 1;
     }
     else{
+
         syslog(LOG_NOTICE, "Listening on %s:%i", s.serverAddress().toString().toStdString().c_str(), s.serverPort());
-        syslog(LOG_INFO, "Document root is in: %s\nPlugin root is in: %s", docRoot.toStdString().c_str(),
-            pluginRoot.toStdString().c_str());
+        syslog(LOG_INFO, "Document root is in: %s\nPlugin root is in: %s",
+            Configuration::get("documentroot").toString().toStdString().c_str(),
+            Configuration::get("pluginroot").toString().toStdString().c_str());
     }
 
     return a.exec();

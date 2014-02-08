@@ -8,10 +8,8 @@
 #include "httpconnection.h"
 #include "dispatcher.h"
 
-HTTPConnection::HTTPConnection(int socketDescriptor, const QString &docRoot,
-                               const QString &pluginRoot, QObject *parent) :
-    QObject(parent), socket(this), eventLoop(this), docRoot(docRoot),
-    pluginRoot(pluginRoot)
+HTTPConnection::HTTPConnection(int socketDescriptor, QObject *parent) :
+    QObject(parent), socket(this), eventLoop(this)
 {
     if(!socket.setSocketDescriptor(socketDescriptor)){
         qDebug() << socket.errorString() << "Cannot set sd: " << socketDescriptor;
@@ -79,7 +77,7 @@ void HTTPConnection::processRequestData(const HTTPRequest &requestData)
         return;
     }
 
-    Dispatcher dispatcher(docRoot, pluginRoot);
+    Dispatcher dispatcher;
 
     HTTPRequestHandler *requestHandler =
             dispatcher.getHTTPRequestHandler(requestData);

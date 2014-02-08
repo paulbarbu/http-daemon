@@ -1,18 +1,14 @@
 #include "httpconnectionmanager.h"
 #include "httpconnection.h"
 
-HTTPConnectionManager::HTTPConnectionManager(int descriptor,
-                                             const QString &docRoot,
-                                             const QString &pluginRoot,
-                                             QObject *parent) :
-    QObject(parent), socketDescriptor(descriptor), docRoot(docRoot),
-    pluginRoot(pluginRoot)
+HTTPConnectionManager::HTTPConnectionManager(int descriptor, QObject *parent) :
+    QObject(parent), socketDescriptor(descriptor)
 {
 }
 
 void HTTPConnectionManager::run()
 {
-    HTTPConnection httpConnection(socketDescriptor, docRoot, pluginRoot);
+    HTTPConnection httpConnection(socketDescriptor);
     httpConnection.start();
 
     emit connectionClosed();

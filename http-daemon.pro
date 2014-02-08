@@ -22,7 +22,8 @@ SOURCES += main.cpp \
 	filehttprequesthandler.cpp \
 	dirhttprequesthandler.cpp \
 	httpdaemon.cpp \
-	logging.cpp
+	logging.cpp \
+	configuration.cpp
 
 HEADERS += \
 	httpparser.h \
@@ -32,9 +33,13 @@ HEADERS += \
 	filehttprequesthandler.h \
 	dirhttprequesthandler.h \
 	httpdaemon.h \
-	logging.h
+	logging.h \
+	configuration.h
 
-OTHER_FILES +=
+OTHER_FILES += \
+	httpdaemon.conf
+
+DEFINES += CONFIG_DIR=\\\"/path/to/http-daemon/config/dir/\\\"
 
 CONFIG(release, debug|release){
 	DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_WARNING_OUTPUT
