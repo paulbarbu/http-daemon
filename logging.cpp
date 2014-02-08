@@ -29,7 +29,7 @@ void qtOutputToLog(QtMsgType type, const QMessageLogContext &context, const QStr
     Q_UNUSED(context);
 
     QByteArray localMsg = m.toLocal8Bit();
-    char *msg = localMsg.data();
+    const char *msg = localMsg.data();
 #else
 void qtOutputToLog(QtMsgType type, const char *msg)
 {
@@ -47,6 +47,10 @@ void qtOutputToLog(QtMsgType type, const char *msg)
             break;
         case QtFatalMsg:
             syslog(LOG_ALERT, "Qt fatal: %s", msg);
-            abort();
+            exit(1);
+            break;
+        default:
+            syslog(LOG_INFO, "Qt info: %s", msg);
+            break;
     }
 }
