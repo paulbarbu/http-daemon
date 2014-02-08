@@ -29,7 +29,7 @@ void qtOutputToLog(QtMsgType type, const QMessageLogContext &context, const QStr
     Q_UNUSED(context);
 
     QByteArray localMsg = m.toLocal8Bit();
-    const char *msg = localMsg.data();
+    const char *msg = localMsg.constData();
 #else
 void qtOutputToLog(QtMsgType type, const char *msg)
 {

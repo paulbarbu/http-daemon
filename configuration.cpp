@@ -71,14 +71,20 @@ bool Configuration::check() const
     QFileInfo info(get("documentroot").toString());
 
     if(!info.isReadable()){
-        syslog(LOG_ERR, "The documentroot path (%s) is not readable!", info.absoluteFilePath().toStdString().c_str());
+        QByteArray msg;
+        msg = info.absoluteFilePath().toLocal8Bit();
+
+        syslog(LOG_ERR, "The documentroot path (%s) is not readable!", msg.constData());
         ok = false;
     }
 
     info.setFile(get("pluginroot").toString());
 
     if(!info.isReadable()){
-        syslog(LOG_ERR, "The pluginroot path (%s) is not readable!", info.absoluteFilePath().toStdString().c_str());
+        QByteArray msg;
+        msg = info.absoluteFilePath().toLocal8Bit();
+
+        syslog(LOG_ERR, "The pluginroot path (%s) is not readable!", msg.constData());
         ok = false;
     }
 

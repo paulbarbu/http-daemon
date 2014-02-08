@@ -43,12 +43,18 @@ int main(int argc, char *argv[])
     Configuration c(CONFIG_DIR CONFIG_FILE_NAME);
 
     if(!c.read()){
-        syslog(LOG_ERR, "Cannot read configuration file at: %s", c.getSettingsPath().toStdString().c_str());
+        QByteArray msg;
+        msg = c.getSettingsPath().toLocal8Bit();
+
+        syslog(LOG_ERR, "Cannot read configuration file at: %s", msg.constData());
         return 1;
     }
 
     if(!c.check()){
-        syslog(LOG_ERR, "Invalid configuration file at: %s", c.getSettingsPath().toStdString().c_str());
+        QByteArray msg;
+        msg = c.getSettingsPath().toLocal8Bit();
+
+        syslog(LOG_ERR, "Invalid configuration file at: %s", msg.constData());
         return 1;
     }
 
@@ -95,7 +101,7 @@ int main(int argc, char *argv[])
 
     QByteArray msg;
     msg = Configuration::get("user", "root").toString().toLocal8Bit();
-    const char *user = msg.data();
+    const char *user = msg.constData();
 
     struct passwd *pw = getpwnam(user);
 
@@ -130,14 +136,21 @@ int main(int argc, char *argv[])
     s.setObjectName("HTTPDaemon");
 
     if(!s.listen(QHostAddress(Configuration::get("address").toString()), port)){
-         syslog(LOG_ERR, "Cannot start the server: %s", s.errorString().toStdString().c_str());
-         return 1;
+        QByteArray msg;
+        msg = s.errorString().toLocal8Bit();
+
+        syslog(LOG_ERR, "Cannot start the server: %s", msg.constData());
+        return 1;
     }
     else{
-        syslog(LOG_NOTICE, "Listening on %s:%i", s.serverAddress().toString().toStdString().c_str(), s.serverPort());
-        syslog(LOG_INFO, "Document root is in: %s\nPlugin root is in: %s",
-            Configuration::get("documentroot").toString().toStdString().c_str(),
-            Configuration::get("pluginroot").toString().toStdString().c_str());
+        QByteArray msg, msg1;
+        msg = s.serverAddress().toString().toLocal8Bit();
+
+        syslog(LOG_NOTICE, "Listening on %s:%i", msg.constData(), s.serverPort());
+
+        msg = Configuration::get("documentroot").toString().toLocal8Bit();
+        msg1 = Configuration::get("pluginroot").toString().toLocal8Bit();
+        syslog(LOG_INFO, "Document root is in: %s\nPlugin root is in: %s", msg.constData(), msg1.constData());
     }
 
     return a.exec();
