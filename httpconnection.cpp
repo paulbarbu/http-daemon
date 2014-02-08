@@ -60,7 +60,9 @@ void HTTPConnection::processRequestData(const HTTPRequest &requestData)
              << requestData.method << "\n\tUrl:"
              << requestData.url << "\n\tProtocol:"
              << requestData.protocol << "\n\tVer:"
-             <<requestData.protocolVersion
+             << requestData.protocolVersion << "\n\tHost:"
+             << requestData.host << "\n\tPort:"
+             << requestData.port
              << "\n\tFields:" << requestData.fields
              << "\n\tContent-Length:" << requestData.contentLength
              << "\n\tpost:" << requestData.postData;

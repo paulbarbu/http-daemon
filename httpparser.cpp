@@ -1,4 +1,5 @@
 #include <QDebug>
+#include <QHostAddress>
 
 #include "httpparser.h"
 
@@ -90,17 +91,24 @@ void HTTPParser::parseRequestHeader()
     foreach(QString line, fields){
         spacePos = line.indexOf(" ");
 
-        requestData.fields.insert(line.left(spacePos-1),
-                           QStringList(line.right(line.size()-spacePos-1)));
+        requestData.fields.insert(line.left(spacePos-1), line.right(line.size()-spacePos-1));
     }
 
     if(requestData.fields.contains("Host")){
-        requestData.fields["Host"] = requestData.fields["Host"][0].split(":");
+        QStringList hostLine = requestData.fields["Host"].toString().split(":");
+
+        requestData.port = hostLine[1].toUInt(&ok);
+        if(!ok){
+            emit parseError("Invalid port number!");
+            return;
+        }
+
+        requestData.host = QHostAddress(hostLine[0]);
+        requestData.fields.remove("Host");
     }
 
     if(requestData.fields.contains("Content-Length")){
-        requestData.contentLength = requestData.fields["Content-Length"][0]
-                .toUInt(&ok);
+        requestData.contentLength = requestData.fields["Content-Length"].toUInt(&ok);
 
         if(!ok){
             emit parseError("Invalid Content-Length value!");
