@@ -19,6 +19,7 @@
 int main(int argc, char *argv[])
 {
     openlog("http-daemon", LOG_ODELAY, LOG_DAEMON);
+    atexit(closelog);
 
     #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         qInstallMessageHandler(qtOutputToLog);
@@ -59,7 +60,7 @@ int main(int argc, char *argv[])
     }
 
     if(pid > 0){
-        out << "Successfully forked child with PID: " << pid;
+        out << "Successfully forked child with PID: " << pid << endl;
         syslog(LOG_INFO, "Successfully forked child with PID: %i", pid);
 
         return 0;
@@ -70,12 +71,12 @@ int main(int argc, char *argv[])
     pid_t sid = setsid();
 
     if(-1 == sid){
-        syslog(LOG_ERR, "setsid() failed: %s", strerror(errno));
+        syslog(LOG_ERR, "setsid() failed: %m");
         return 1;
     }
 
     if(-1 == chdir("/")){
-        syslog(LOG_ERR, "chdir() failed: %s", strerror(errno));
+        syslog(LOG_ERR, "chdir() failed: %m");
         return 1;
     }
 
