@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core network
+QT       += core network concurrent
 
 QT       -= gui
 
@@ -35,6 +35,10 @@ HEADERS += \
 	httpdaemon.h \
 	logging.h \
 	configuration.h
+
+CONFIG += c++11
+
+LIBS += -lQt5Concurrent
 
 OTHER_FILES += \
 	httpdaemon.conf

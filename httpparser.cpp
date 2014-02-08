@@ -118,6 +118,21 @@ void HTTPParser::parseRequestHeader()
         requestData.fields.remove("Content-Length");
     }
 
+    if(requestData.fields.contains("Cookie")){
+        //replace spaces and semicolons with newlines so that the parsing is done properly
+        //ugly hack, but it's needed since parseCookies() is designed to work on server-set "Set-Cookie:" headers,
+        //not on "Cookie:" headers, set by clients
+        requestData.cookieJar = QNetworkCookie::parseCookies(
+            requestData.fields["Cookie"].toByteArray().replace(" ", "\n").replace(";", "\n"));
+
+        if(requestData.cookieJar.empty()){
+            emit parseError("Invalid Cookie value!");
+            return;
+        }
+
+        requestData.fields.remove("Cookie");
+    }
+
     bytesToParse = requestData.contentLength;
 
     isParsedHeader = true;

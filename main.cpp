@@ -19,6 +19,7 @@
 #include "logging.h"
 #include "configuration.h"
 
+//TODO: test from telnet without port number => bad port number in httprequest
 int main(int argc, char *argv[])
 {
     openlog("http-daemon", LOG_ODELAY, LOG_DAEMON);
