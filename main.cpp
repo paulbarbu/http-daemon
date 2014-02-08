@@ -1,10 +1,13 @@
 #include <errno.h>
+#include <stdlib.h>
 
 #include <QtGlobal>
 
 #ifndef Q_OS_WIN32
     #include <unistd.h>
     #include <sys/stat.h>
+    #include <sys/types.h>
+    #include <pwd.h>
 #endif
 
 #include <QCoreApplication>
@@ -66,7 +69,6 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    //TODO: become a user (configured via http-daemon.conf)
     umask(0);
     pid_t sid = setsid();
 
@@ -84,6 +86,37 @@ int main(int argc, char *argv[])
     //close(STDIN_FILENO);
     //close(STDOUT_FILENO);
     //close(STDERR_FILENO);
+
+    if(0 != getuid()){
+        qDebug () << "Current UID:" << getuid();
+        syslog(LOG_ERR, "Must be root to switch user");
+        return 1;
+    }
+
+    QByteArray msg;
+    msg = Configuration::get("user", "root").toString().toLocal8Bit();
+    const char *user = msg.data();
+
+    struct passwd *pw = getpwnam(user);
+
+    if(NULL == pw){
+        syslog(LOG_ERR, "Cannot find user %s, error: %m", user);
+        return 1;
+    }
+
+    if(0 != setgid(pw->pw_gid)){
+        syslog(LOG_ERR, "Cannot set gid to %i, error: %m", pw->pw_gid);
+        return 1;
+    }
+
+    //set secondary groups
+
+    if(0 != setuid(pw->pw_uid)){
+        syslog(LOG_ERR, "Cannot set uid to %i, error: %m", pw->pw_uid);
+        return 1;
+    }
+
+    syslog(LOG_INFO, "Set uid to %d and gid to %d", pw->pw_uid, pw->pw_gid);
 #endif
 
     bool ok;
