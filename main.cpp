@@ -95,12 +95,11 @@ int main(int argc, char *argv[])
     HTTPDaemon s;
     s.setObjectName("HTTPDaemon");
 
-    if(!s.listen(QHostAddress::LocalHost, port)){
+    if(!s.listen(QHostAddress(Configuration::get("address").toString()), port)){
          syslog(LOG_ERR, "Cannot start the server: %s", s.errorString().toStdString().c_str());
          return 1;
     }
     else{
-
         syslog(LOG_NOTICE, "Listening on %s:%i", s.serverAddress().toString().toStdString().c_str(), s.serverPort());
         syslog(LOG_INFO, "Document root is in: %s\nPlugin root is in: %s",
             Configuration::get("documentroot").toString().toStdString().c_str(),
