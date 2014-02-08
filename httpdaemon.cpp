@@ -7,11 +7,8 @@
 
 HTTPDaemon::HTTPDaemon(QObject *parent) : QTcpServer(parent)
 {
-    //TODO: check the network and the files owned by my program to see what
-    //QTcpServer does
 }
 
-//TODO: convert everything to C++11
 void HTTPDaemon::incomingConnection(int socketDescriptor)
 {
     HTTPConnectionManager *httpConnectionManager =

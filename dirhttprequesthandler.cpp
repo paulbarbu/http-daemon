@@ -46,7 +46,6 @@ void DirHTTPRequestHandler::createResponse()
 
     }
 
-    //TODO: format as HTML
     response.setStatusCode(200);
     response.setReasonPhrase("OK");
     response.setHeaderField("Content-Type", "text/plain");
