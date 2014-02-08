@@ -3,6 +3,10 @@
 
 #include <QtGlobal>
 
+#ifndef Q_OS_WIN32
+    #include <syslog.h>
+#endif
+
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 void qtOutputToLog(QtMsgType type, const QMessageLogContext &context, const QString &m);
 #else

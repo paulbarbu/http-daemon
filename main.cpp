@@ -5,7 +5,6 @@
 #ifndef Q_OS_WIN32
     #include <unistd.h>
     #include <sys/stat.h>
-    #include <syslog.h>
 #endif
 
 #include <QCoreApplication>
