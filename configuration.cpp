@@ -2,6 +2,7 @@
 #include <QSettings>
 #include <QReadWriteLock>
 #include <QDebug>
+#include <QStringList>
 
 #include "configuration.h"
 #include "logging.h"

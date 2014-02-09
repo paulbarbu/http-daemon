@@ -19,6 +19,8 @@
 #include "logging.h"
 #include "configuration.h"
 
+//TODO: check the error: Success when changing to an inexistent user
+//TODO: check the weird char in the logs
 //TODO: make some test on other platforms/versions with/without QT += concurrent and LIBS += -lQt5Concurrent
 //TODO: test from telnet without port number => bad port number in httprequest
 int main(int argc, char *argv[])

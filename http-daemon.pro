@@ -36,9 +36,7 @@ HEADERS += \
 	logging.h \
 	configuration.h
 
-CONFIG += c++11
-
-LIBS += -lQt5Concurrent
+QMAKE_CXXFLAGS += -std=c++11
 
 OTHER_FILES += \
 	httpdaemon.conf
