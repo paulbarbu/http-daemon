@@ -20,13 +20,13 @@
 #include "configuration.h"
 
 //TODO: check the error: Success when changing to an inexistent user
-//TODO: check the weird char in the logs
-//TODO: make some test on other platforms/versions with/without QT += concurrent and LIBS += -lQt5Concurrent
 //TODO: test from telnet without port number => bad port number in httprequest
 int main(int argc, char *argv[])
 {
-    openlog("http-daemon", LOG_ODELAY, LOG_DAEMON);
-    atexit(closelog);
+    #ifndef Q_OS_WIN32
+        openlog("http-daemon", LOG_ODELAY, LOG_DAEMON);
+        atexit(closelog);
+    #endif
 
     #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         qInstallMessageHandler(qtOutputToLog);
