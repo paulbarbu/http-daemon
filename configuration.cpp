@@ -36,6 +36,21 @@ bool Configuration::read()
             //and the name of the library as the value
             plugins.insert(settings.value(key).toString(), key.right(key.size() - key.indexOf("/") - 1));
         }
+        else if(-1 != key.indexOf("/")){
+            QString new_key = key.right(key.size() - key.indexOf("/") - 1);
+            QString section = key.left(key.indexOf("/")); //TODO: memoize
+
+            if(!conf.contains(new_key)){
+                conf[new_key] = QHash<QString, QVariant>();
+            }
+
+            QHash<QString, QVariant> t(conf[section].toHash());
+            t.insert(new_key, settings.value(key).toString());
+            conf[section] = t;
+
+            qDebug() << section << "/" << new_key << ":" << conf[section].toHash()[new_key];
+            qDebug() <<"to be:" << key << ":" << settings.value(key).toString();
+        }
         else{
             conf[key] = settings.value(key);
 
