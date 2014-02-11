@@ -16,9 +16,20 @@ HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const HTTPRequest &request
 {
     QHash<QString, QVariant> plugins(Configuration::get("plugins").toHash());
 
-    //TODO: this might pose a problem when a user enters on /plugin/path_known_only_by_the_plugin
-    if(plugins.contains(requestData.url.path())){
-        return loadPlugin(plugins[requestData.url.path()].toString(), requestData);
+    QStringList urlParts = requestData.url.path().split("/", QString::SkipEmptyParts);
+    QString urlStart("");
+
+    if(!urlParts.empty()){
+        urlStart = urlParts[0];
+    }
+
+    qDebug() << "urlStart:" << urlStart;
+
+    foreach(QString key, plugins.keys()){
+        qDebug() << "plugin_key (path):" << key << "index of urlStart in key:" << key.indexOf(urlStart);
+        if(1 == key.indexOf(urlStart) || (urlStart == "" && "/" == key)){
+            return loadPlugin(plugins[key].toString(), requestData);
+        }
     }
 
     const QString docRoot(Configuration::get("documentroot").toString());
@@ -56,7 +67,6 @@ HTTPRequestHandler* Dispatcher::loadPlugin(const QString &plugin,
         return NULL;
     }
 
-    //TODO: check what happens if the config is empty
     QString conf(plugin);
 
     conf.replace(".so", "").replace(".dll", "");
