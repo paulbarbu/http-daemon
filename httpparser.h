@@ -16,7 +16,7 @@ public:
     HTTPParser &operator<<(const QByteArray &chunk);
 
 signals:
-    void parsed(const HTTPRequest &requestData);
+    void parsed(HTTPRequest requestData);
     void parseError(const QString &reason);
 
 private:

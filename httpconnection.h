@@ -27,7 +27,7 @@ private slots:
 public slots:
     void start();
     void onError(QAbstractSocket::SocketError socketError);
-    void processRequestData(const HTTPRequest &requestData);
+    void processRequestData(HTTPRequest requestData);
     void read();
     void write(HTTPResponse &response);
     void close();

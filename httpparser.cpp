@@ -82,7 +82,7 @@ void HTTPParser::parseRequestHeader()
         return;
     }
 
-    requestData.method = statusLine[0];
+    requestData.method = statusLine[0].toUpper();
     requestData.protocol = protocol[0];
     requestData.protocolVersion = ver;
 

@@ -51,24 +51,28 @@ void HTTPConnection::write(HTTPResponse &response)
 {
     QByteArray partialResponse = response.getPartial();
 
-    socket.write(partialResponse, partialResponse.size());
+    socket.write(partialResponse);
 }
 
-void HTTPConnection::processRequestData(const HTTPRequest &requestData)
+void HTTPConnection::processRequestData(HTTPRequest requestData)
 {
+    requestData.remoteAddress = socket.peerAddress();
+
     qDebug() << "Request data:\n\tMethod:"
              << requestData.method << "\n\tUrl:"
              << requestData.url << "\n\tProtocol:"
              << requestData.protocol << "\n\tVer:"
              << requestData.protocolVersion << "\n\tHost:"
              << requestData.host << "\n\tPort:"
-             << requestData.port << "\n\tCookies:"
+             << requestData.port << "\n\tRemote addr:"
+             << requestData.remoteAddress << "\n\tCookies:"
              << requestData.cookieJar
              << "\n\tFields:" << requestData.fields
              << "\n\tContent-Length:" << requestData.contentLength
              << "\n\tpost:" << requestData.postData;
 
     //TODO: integrate FastCGI
+    //TOOD: implement other methods
 
     if("GET" != requestData.method && "POST" != requestData.method){
         HTTPResponse response;
