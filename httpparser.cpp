@@ -86,10 +86,14 @@ void HTTPParser::parseRequestHeader()
     requestData.protocol = protocol[0];
     requestData.protocolVersion = ver;
 
+    //TODO: refactor the above into a different method: parseStatusLine
+
     fields.removeAt(0);
     int spacePos;
     foreach(QString line, fields){
-        spacePos = line.indexOf(" ");
+        spacePos = line.indexOf(" "); //TODO: handle a line that looks like this: Content-Type:text/html -- notice the lack of space
+
+        //TODO: handle the case: "Content-Type:", there is no value or no key
 
         requestData.fields.insert(line.left(spacePos-1), line.right(line.size()-spacePos-1));
     }
@@ -187,6 +191,8 @@ void HTTPParser::discardRequestHeader()
         lf = "\r\n\r\n";
         lfPos = crlfPos;
     }
+
+    //TODO: handle the case when there is no header and body distinction
 
     //discard the header from the request
     data = data.replace(lf, "").right(data.size()-lfPos-lf.size());
