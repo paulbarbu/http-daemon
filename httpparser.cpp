@@ -89,26 +89,30 @@ void HTTPParser::parseRequestHeader()
     //TODO: refactor the above into a different method: parseStatusLine
 
     fields.removeAt(0);
-    int spacePos;
+    int colonPos;
     foreach(QString line, fields){
-        spacePos = line.indexOf(" "); //TODO: handle a line that looks like this: Content-Type:text/html -- notice the lack of space
+        colonPos = line.indexOf(":");
 
-        //TODO: handle the case: "Content-Type:", there is no value or no key
-
-        requestData.fields.insert(line.left(spacePos-1), line.right(line.size()-spacePos-1));
+        if(-1 != colonPos){
+            requestData.fields.insert(line.left(colonPos).trimmed(), line.right(line.size()-colonPos-1).trimmed());
+        }
     }
 
     if(requestData.fields.contains("Host")){
-        QStringList hostLine = requestData.fields["Host"].toString().split(":");
+        if(requestData.fields["Host"].toString().size()){
+            QStringList hostLine = requestData.fields["Host"].toString().split(":");
 
-        requestData.port = hostLine[1].toUInt(&ok);
-        if(!ok){
-            emit parseError("Invalid port number!");
-            return;
+            if(hostLine.size() == 2){
+                requestData.port = hostLine[1].toUInt(&ok);
+                if(!ok){
+                    emit parseError("Invalid port number!");
+                    return;
+                }
+            }
+
+            requestData.host = QHostAddress(hostLine[0]);
+            requestData.fields.remove("Host");
         }
-
-        requestData.host = QHostAddress(hostLine[0]);
-        requestData.fields.remove("Host");
     }
 
     if(requestData.fields.contains("Content-Length")){

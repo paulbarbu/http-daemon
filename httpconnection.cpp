@@ -58,6 +58,10 @@ void HTTPConnection::processRequestData(HTTPRequest requestData)
 {
     requestData.remoteAddress = socket.peerAddress();
 
+    if(socket.localPort() != requestData.port){
+        requestData.port = socket.localPort();
+    }
+
     qDebug() << "Request data:\n\tMethod:"
              << requestData.method << "\n\tUrl:"
              << requestData.url << "\n\tProtocol:"
