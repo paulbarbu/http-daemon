@@ -43,7 +43,6 @@ void HTTPParser::parsePostData()
 
 void HTTPParser::parseRequestHeader(const QByteArray &h)
 {
-
     qDebug() << Q_FUNC_INFO;
     qDebug() << "HEADER:" << h;
     QString header(h);
@@ -55,110 +54,18 @@ void HTTPParser::parseRequestHeader(const QByteArray &h)
         return;
     }
 
-    QStringList statusLine = fields[0].split(" ");
-
-    if(3 != statusLine.size()){
-        emit parseError("Invalid status line!");
+    QString err = parseStatusLine(fields[0]);
+    if(!err.isEmpty()){
+        emit parseError(err);
         return;
     }
-
-    if("GET" != statusLine[0] && "POST" != statusLine[0] &&
-            "HEAD" != statusLine[0]){
-        emit parseError("Invalid method!");
-        return;
-    }
-
-    if(statusLine[1].isEmpty()){
-        emit parseError("Path cannot be empty!");
-        return;
-    }
-
-    QStringList protocol = statusLine[2].split("/");
-    bool ok;
-
-    if(2 != protocol.size()){
-        emit parseError("Invalid protocol!");
-        return;
-    }
-
-    double ver = protocol[1].toDouble(&ok);
-
-    if("HTTP" != protocol[0] || !ok || ver < 0.9 || ver > 1.1){
-        emit parseError("Invalid protocol!");
-        return;
-    }
-
-    requestData.url.setUrl(statusLine[1]);
-
-    if(!requestData.url.isValid()){
-        emit parseError("Invalid URL!");
-        return;
-    }
-
-    requestData.method = statusLine[0].toUpper();
-    requestData.protocol = protocol[0];
-    requestData.protocolVersion = ver;
-
-    //TODO: refactor the above into a different method: parseStatusLine
 
     fields.removeAt(0);
     qDebug() << "FIELDS:" << fields;
-    int colonPos;
-    foreach(QString line, fields){
-        colonPos = line.indexOf(":");
-
-        if(-1 != colonPos){
-            //TODO: move the custom checks from below here so that I don't add and then remove an entry from the fields
-            requestData.fields.insert(line.left(colonPos).trimmed(), line.right(line.size()-colonPos-1).trimmed());
-        }
-    }
-
-    if(requestData.fields.contains("Host")){
-        if(requestData.fields["Host"].toString().size()){
-            QStringList hostLine = requestData.fields["Host"].toString().split(":");
-
-            if(hostLine.size() == 2){
-                requestData.port = hostLine[1].toUInt(&ok);
-                if(!ok){
-                    emit parseError("Invalid port number!");
-                    return;
-                }
-            }
-
-            requestData.host = QHostAddress(hostLine[0]);
-            requestData.fields.remove("Host");
-        }
-    }
-
-    if(requestData.fields.contains("Content-Length")){
-        requestData.contentLength = requestData.fields["Content-Length"].toUInt(&ok);
-
-        if(!ok){
-            emit parseError("Invalid Content-Length value!");
-            return;
-        }
-
-        requestData.fields.remove("Content-Length");
-    }
-
-    if(requestData.fields.contains("Content-Type")){
-        requestData.contentType = requestData.fields["Content-Type"].toString();
-        requestData.fields.remove("Content-Type");
-    }
-
-    if(requestData.fields.contains("Cookie")){
-        //replace spaces and semicolons with newlines so that the parsing is done properly
-        //ugly hack, but it's needed since parseCookies() is designed to work on server-set "Set-Cookie:" headers,
-        //not on "Cookie:" headers, set by clients
-        requestData.cookieJar = QNetworkCookie::parseCookies(
-            requestData.fields["Cookie"].toByteArray().replace(" ", "\n").replace(";", "\n"));
-
-        if(requestData.cookieJar.empty()){
-            emit parseError("Invalid Cookie value!");
-            return;
-        }
-
-        requestData.fields.remove("Cookie");
+    err = parseFields(fields);
+    if(!err.isEmpty()){
+        emit parseError(err);
+        return;
     }
 
     bytesToParse = requestData.contentLength;
@@ -213,4 +120,104 @@ void HTTPParser::parse()
                           "HEAD" == requestData.method)){
         emit parsed(requestData);
     }
+}
+
+QString HTTPParser::parseFields(const QStringList &fields)
+{
+    bool ok;
+    int colonPos;
+    foreach(QString line, fields){
+        colonPos = line.indexOf(":");
+
+        if(-1 == colonPos){
+            continue; //discard invalid fields
+        }
+
+        QString key = line.left(colonPos).trimmed();
+        QString val = line.right(line.size()-colonPos-1).trimmed();
+
+        if("host" == key.toLower()){
+            if(val.size()){
+                QStringList hostLine = val.split(":");
+
+                if(hostLine.size() == 2){
+                    requestData.port = hostLine[1].toUInt(&ok);
+                    if(!ok){
+                        return "Invalid port number!";
+                    }
+                }
+
+                requestData.host = QHostAddress(hostLine[0]);
+            }
+        }
+        else if("content-length" == key.toLower()){
+            requestData.contentLength = val.toUInt(&ok);
+
+            if(!ok){
+                return "Invalid Content-Length value!";
+            }
+        }
+        else if("content-type" == key.toLower()){
+            requestData.contentType = val;
+        }
+        else if("cookie" == key.toLower()){
+            //replace spaces and semicolons with newlines so that the parsing is done properly
+            //ugly hack, but it's needed since parseCookies() is designed to work on server-set "Set-Cookie:" headers,
+            //not on "Cookie:" headers, set by clients
+            val.replace(" ", "\n").replace(";", "\n");
+            requestData.cookieJar = QNetworkCookie::parseCookies(val.toLocal8Bit());
+
+            if(requestData.cookieJar.empty()){
+                return "Invalid Cookie value!";
+            }
+        }
+        else{
+            requestData.fields.insert(key, val);
+        }
+    }
+
+    return "";
+}
+
+QString HTTPParser::parseStatusLine(const QString &statusLine)
+{
+    QStringList statusLineLst = statusLine.split(" ");
+
+    if(3 != statusLineLst.size()){
+        return "Invalid status line!";
+    }
+
+    if("GET" != statusLineLst[0] && "POST" != statusLineLst[0] &&
+            "HEAD" != statusLineLst[0]){
+        return "Invalid method!";
+    }
+
+    if(statusLineLst[1].isEmpty()){
+        return "Path cannot be empty!";
+    }
+
+    QStringList protocol = statusLineLst[2].split("/");
+    bool ok;
+
+    if(2 != protocol.size()){
+        return "Invalid protocol!";
+    }
+
+    double ver = protocol[1].toDouble(&ok);
+
+    if("HTTP" != protocol[0] || !ok || ver < 0.9 || ver > 1.1){
+        return "Invalid protocol!";
+    }
+
+    requestData.url.setUrl(statusLineLst[1]);
+
+    if(!requestData.url.isValid()){
+        return "Invalid URL!";
+    }
+
+    requestData.method = statusLineLst[0].toUpper();
+    requestData.protocol = protocol[0];
+    requestData.protocolVersion = ver;
+
+    return "";
 }

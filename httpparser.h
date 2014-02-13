@@ -28,6 +28,8 @@ private:
     void parsePostData();
     void parseRequestHeader(const QByteArray &h);
     void parse();
+    QString parseFields(const QStringList &fields);
+    QString parseStatusLine(const QString &statusLine);
 };
 
 #endif // HTTPPARSER_H

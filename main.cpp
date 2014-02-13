@@ -120,6 +120,7 @@ int main(int argc, char *argv[])
     }
 
     //TODO: set secondary groups
+    //TODO: /l matches /login, /c/srv.php matches /cgi/srv.php
     if(0 != setuid(pw->pw_uid)){
         syslog(LOG_ERR, "Cannot set uid to %i, error: %m", pw->pw_uid);
         return 1;
