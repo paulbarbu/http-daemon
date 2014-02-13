@@ -10,7 +10,16 @@ HTTPParser::HTTPParser(QObject *parent) : QObject(parent), isParsedHeader(false)
 
 void HTTPParser::parsePostData()
 {
+    qDebug() << Q_FUNC_INFO;
+    qDebug() << "DATA:" << data;
     if(data.isEmpty()){
+        return;
+    }
+
+    //TODO: take into account more content types
+    if(requestData.contentType.contains("multipart/form-data")){
+        requestData.rawPostData = data;
+        bytesToParse = 0;
         return;
     }
 
