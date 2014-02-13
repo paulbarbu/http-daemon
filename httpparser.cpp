@@ -126,6 +126,11 @@ void HTTPParser::parseRequestHeader()
         requestData.fields.remove("Content-Length");
     }
 
+    if(requestData.fields.contains("Content-Type")){
+        requestData.contentType = requestData.fields["Content-Type"].toString();
+        requestData.fields.remove("Content-Type");
+    }
+
     if(requestData.fields.contains("Cookie")){
         //replace spaces and semicolons with newlines so that the parsing is done properly
         //ugly hack, but it's needed since parseCookies() is designed to work on server-set "Set-Cookie:" headers,
