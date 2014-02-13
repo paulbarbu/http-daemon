@@ -119,7 +119,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    //set secondary groups
+    //TODO: set secondary groups
+    //TODO: check the server with file uploads
 
     if(0 != setuid(pw->pw_uid)){
         syslog(LOG_ERR, "Cannot set uid to %i, error: %m", pw->pw_uid);

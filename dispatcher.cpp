@@ -51,10 +51,10 @@ HTTPRequestHandler* Dispatcher::loadPlugin(const QString &plugin,
 {
     const QString pluginRoot(Configuration::get("pluginroot").toString());
 
-    QPluginLoader loader(pluginRoot + "/" + plugin);
+    QPluginLoader loader(pluginRoot + plugin);
 
     #ifdef QT_DEBUG
-        QFileInfo info(pluginRoot + "/" + plugin);
+        QFileInfo info(pluginRoot + plugin);
         qDebug() << "Loading from: " << info.absoluteFilePath();
     #endif
 
