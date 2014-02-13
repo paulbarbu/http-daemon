@@ -26,8 +26,8 @@ HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const HTTPRequest &request
     qDebug() << "urlStart:" << urlStart;
 
     foreach(QString key, plugins.keys()){
-        qDebug() << "plugin_key (path):" << key << "index of urlStart in key:" << key.indexOf(urlStart);
-        if(1 == key.indexOf(urlStart) || (urlStart == "" && "/" == key)){
+        qDebug() << "plugin_key (path):" << key;
+        if(key.right(key.size()-1) == urlStart || (urlStart == "" && "/" == key)){
             return loadPlugin(plugins[key].toString(), requestData);
         }
     }
