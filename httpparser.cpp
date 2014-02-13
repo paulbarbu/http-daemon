@@ -32,10 +32,14 @@ void HTTPParser::parsePostData()
     bytesToParse = 0;
 }
 
-void HTTPParser::parseRequestHeader()
+void HTTPParser::parseRequestHeader(const QByteArray &h)
 {
-    QString request = data;
-    QStringList fields = request.replace("\r", "").split("\n", QString::SkipEmptyParts);
+
+    qDebug() << Q_FUNC_INFO;
+    qDebug() << "HEADER:" << h;
+    QString header(h);
+
+    QStringList fields = header.replace("\r", "").split("\n", QString::SkipEmptyParts);
 
     if(fields.isEmpty()){
         emit parseError("Empty request!");
@@ -89,11 +93,13 @@ void HTTPParser::parseRequestHeader()
     //TODO: refactor the above into a different method: parseStatusLine
 
     fields.removeAt(0);
+    qDebug() << "FIELDS:" << fields;
     int colonPos;
     foreach(QString line, fields){
         colonPos = line.indexOf(":");
 
         if(-1 != colonPos){
+            //TODO: move the custom checks from below here so that I don't add and then remove an entry from the fields
             requestData.fields.insert(line.left(colonPos).trimmed(), line.right(line.size()-colonPos-1).trimmed());
         }
     }
@@ -166,10 +172,20 @@ HTTPParser &HTTPParser::operator<<(const QByteArray &chunk)
 
 void HTTPParser::parse()
 {
-    if(!isParsedHeader &&
-            (-1 != data.indexOf("\r\n\r\n") || -1 != data.indexOf("\n\n"))){
-        parseRequestHeader();
-        discardRequestHeader();
+    //TODO: handle the case when there is no header and body distinction
+    if(!isParsedHeader){
+        int pos = data.indexOf("\r\n\r\n");
+        int len = 4;
+
+        if(-1 == pos){
+            pos = data.indexOf("\n\n");
+            len = 2;
+        }
+
+        if(-1 != pos){
+            parseRequestHeader(data.left(pos));
+            data = data.right(data.size()-pos-len);
+        }
     }
 
     if(isParsedHeader && "POST" == requestData.method){
@@ -188,21 +204,4 @@ void HTTPParser::parse()
                           "HEAD" == requestData.method)){
         emit parsed(requestData);
     }
-}
-
-void HTTPParser::discardRequestHeader()
-{
-    QString lf = "\n\n";
-    int crlfPos = data.indexOf("\r\n\r\n");
-    int lfPos = data.indexOf("\n\n");
-
-    if(-1 != crlfPos){
-        lf = "\r\n\r\n";
-        lfPos = crlfPos;
-    }
-
-    //TODO: handle the case when there is no header and body distinction
-
-    //discard the header from the request
-    data = data.replace(lf, "").right(data.size()-lfPos-lf.size());
 }

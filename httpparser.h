@@ -26,10 +26,8 @@ private:
     HTTPRequest requestData;
 
     void parsePostData();
-    void parseRequestHeader();
+    void parseRequestHeader(const QByteArray &h);
     void parse();
-
-    void discardRequestHeader();
 };
 
 #endif // HTTPPARSER_H
