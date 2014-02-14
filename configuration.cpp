@@ -38,7 +38,7 @@ bool Configuration::read()
         }
         else if(-1 != key.indexOf("/")){
             QString new_key = key.right(key.size() - key.indexOf("/") - 1);
-            QString section = key.left(key.indexOf("/")); //TODO: memoize
+            QString section = key.left(key.indexOf("/"));
 
             if(!conf.contains(new_key)){
                 conf[new_key] = QHash<QString, QVariant>();

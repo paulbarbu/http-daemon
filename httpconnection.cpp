@@ -20,7 +20,9 @@ HTTPConnection::HTTPConnection(int socketDescriptor, QObject *parent) :
 void HTTPConnection::close()
 {
     socket.disconnectFromHost();
-    socket.waitForDisconnected(1000);
+    if (socket.state() == QAbstractSocket::UnconnectedState || socket.waitForDisconnected(1000)){
+            qDebug("Disconnected!");
+    }
     emit closed();
 }
 

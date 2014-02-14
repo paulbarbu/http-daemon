@@ -19,8 +19,6 @@
 #include "logging.h"
 #include "configuration.h"
 
-//TODO: check the error: Success when changing to an inexistent user
-//TODO: test from telnet without port number => bad port number in httprequest
 int main(int argc, char *argv[])
 {
     #ifndef Q_OS_WIN32
@@ -110,7 +108,7 @@ int main(int argc, char *argv[])
     struct passwd *pw = getpwnam(user);
 
     if(NULL == pw){
-        syslog(LOG_ERR, "Cannot find user %s, error: %m", user);
+        syslog(LOG_ERR, "Cannot find user %s", user);
         return 1;
     }
 

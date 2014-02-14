@@ -88,7 +88,6 @@ HTTPParser &HTTPParser::operator<<(const QByteArray &chunk)
 
 void HTTPParser::parse()
 {
-    //TODO: handle the case when there is no header and body distinction
     if(!isParsedHeader){
         int pos = data.indexOf("\r\n\r\n");
         int len = 4;
