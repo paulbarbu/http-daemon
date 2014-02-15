@@ -90,11 +90,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    //TODO: figure out why if I enable these s.listen will fail, create a POC
-    //close(STDIN_FILENO);
-    //close(STDOUT_FILENO);
-    //close(STDERR_FILENO);
-
     if(0 != getuid()){
         qDebug () << "Current UID:" << getuid();
         syslog(LOG_ERR, "Must be root to switch user");
@@ -152,6 +147,13 @@ int main(int argc, char *argv[])
         msg1 = Configuration::get("pluginroot").toString().toLocal8Bit();
         syslog(LOG_INFO, "Document root is in: %s\nPlugin root is in: %s", msg.constData(), msg1.constData());
     }
+
+#ifndef Q_OS_WIN32
+    //for some reason if I do this before starting listening the listen() function will fail
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+#endif
 
     return a.exec();
 }
