@@ -3,13 +3,12 @@
 #include "filehttprequesthandler.h"
 
 FileHTTPRequestHandler::FileHTTPRequestHandler(const HTTPRequest &r, const QString &path) :
-    HTTPRequestHandler(r), file(path), fileInfo(path)
+    HTTPRequestHandler(), file(path), fileInfo(path)
 {
     //TODO: set the mime type - libmagic
-    requestData = r;
 }
 
-void FileHTTPRequestHandler::createResponse()
+void FileHTTPRequestHandler::createResponse(const HTTPRequest &r)
 {
     HTTPResponse response;
 
