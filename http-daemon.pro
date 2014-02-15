@@ -46,6 +46,7 @@ CONFIG(release, debug|release){
 
 #TODO: find a way to link to a more general location, if I move on another machine I won't have to create all the build-* dirs
 #TODO: find a way to move the plugins to their central location without relying on qt creator
+# provide an installation script
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../build-http-daemon-components-Desktop-Debug/release/ -lhttp-daemon-components
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../build-http-daemon-components-Desktop-Debug/debug/ -lhttp-daemon-components
