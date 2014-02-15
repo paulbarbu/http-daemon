@@ -19,6 +19,8 @@ HTTPConnection::HTTPConnection(int socketDescriptor, QObject *parent) :
 
 void HTTPConnection::close()
 {
+    socket.waitForBytesWritten(500);
+
     socket.disconnectFromHost();
     if (socket.state() == QAbstractSocket::UnconnectedState || socket.waitForDisconnected(1000)){
             qDebug("Disconnected!");
