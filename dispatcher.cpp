@@ -1,9 +1,6 @@
 #include <QDebug>
 #include <QFileInfo>
-#include <QPluginLoader>
-
 #include "dispatcher.h"
-#include "iplugin.h"
 #include "filehttprequesthandler.h"
 #include "dirhttprequesthandler.h"
 #include "configuration.h"
@@ -12,10 +9,9 @@ Dispatcher::Dispatcher()
 {
 }
 
+//TODO: pass this just what it needs, the URL (after File and DirHTTPRequestHandlers become plugins
 HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const HTTPRequest &requestData) const
 {
-    QHash<QString, QVariant> plugins(Configuration::get("plugins").toHash());
-
     QStringList urlParts = requestData.url.path().split("/", QString::SkipEmptyParts);
     QString urlStart("");
 
@@ -25,10 +21,10 @@ HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const HTTPRequest &request
 
     qDebug() << "urlStart:" << urlStart;
 
-    foreach(QString key, plugins.keys()){
+    foreach(QString key, Configuration::getPluginKeys()){
         qDebug() << "plugin_key (path):" << key;
         if(key.right(key.size()-1) == urlStart || (urlStart == "" && "/" == key)){
-            return loadPlugin(plugins[key].toString(), requestData);
+            return Configuration::getPluginRequestHandler(key);
         }
     }
 
@@ -39,40 +35,11 @@ HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const HTTPRequest &request
 
     qDebug() << requestData.method << " " << fullPath;
 
+    //TODO: move these to plugins
+    //TODO: HTTPConnection will not delete these if I make exception for the plugins - won't be a problem if they will be plugins, too
     if(f.isDir()){
         return new DirHTTPRequestHandler(requestData, f.absoluteFilePath());
     }
 
     return new FileHTTPRequestHandler(requestData, f.absoluteFilePath());
-}
-
-HTTPRequestHandler* Dispatcher::loadPlugin(const QString &plugin,
-                                           const HTTPRequest &requestData) const
-{
-    const QString pluginRoot(Configuration::get("pluginroot").toString());
-
-    QPluginLoader loader(pluginRoot + plugin);
-
-    #ifdef QT_DEBUG
-        QFileInfo info(pluginRoot + plugin);
-        qDebug() << "Loading from: " << info.absoluteFilePath();
-    #endif
-
-    QObject *p = loader.instance();
-
-    IPlugin *requestHandlerFactory = qobject_cast<IPlugin *>(p);
-
-    if(!requestHandlerFactory){
-        qDebug() << "Plugin not loaded: " << loader.errorString();
-        return NULL;
-    }
-
-    QString conf(plugin);
-
-    conf.replace(".so", "").replace(".dll", "");
-    if(0 == conf.indexOf("lib")){
-        conf.replace(0, 3, "");
-    }
-
-    return requestHandlerFactory->getHTTPRequestHandler(requestData, Configuration::get(conf).toHash());
 }

@@ -3,11 +3,14 @@
 #include <QReadWriteLock>
 #include <QDebug>
 #include <QStringList>
+#include <QPluginLoader>
 
 #include "configuration.h"
 #include "logging.h"
+#include "iplugin.h"
 
 QHash<QString, QVariant> Configuration::conf;
+QHash<QString, HTTPRequestHandler *> Configuration::plugins;
 
 Configuration::Configuration(const QString &iniPath) : settingsPath(iniPath)
 {
@@ -22,7 +25,7 @@ bool Configuration::read()
         return false;
     }
 
-    QHash<QString, QVariant> plugins;
+    QHash<QString, QString> confPlugins;
 
     QSettings settings(settingsPath, QSettings::IniFormat);
     qDebug() << "Settings filename:" << settings.fileName();
@@ -34,7 +37,7 @@ bool Configuration::read()
         if(0 == key.indexOf("plugins/")){
             //insert the URL (from which clients will communicate with the plugin) as the key
             //and the name of the library as the value
-            plugins.insert(settings.value(key).toString(), key.right(key.size() - key.indexOf("/") - 1));
+            confPlugins.insert(settings.value(key).toString(), key.right(key.size() - key.indexOf("/") - 1));
         }
         else if(-1 != key.indexOf("/")){
             QString new_key = key.right(key.size() - key.indexOf("/") - 1);
@@ -58,8 +61,8 @@ bool Configuration::read()
         }
     }
 
-    if(!plugins.isEmpty()){
-        conf["plugins"] = plugins;
+    if(!confPlugins.isEmpty()){
+        loadPlugins(confPlugins);
 
         qDebug() << "Plugins read from config:" << plugins;
     }
@@ -73,6 +76,20 @@ QVariant Configuration::get(const QString &key, QVariant defaultValue)
 {
     //TODO: think about read-locking this
     return conf.value(key, defaultValue);
+}
+
+QStringList Configuration::getPluginKeys()
+{
+    return plugins.keys();
+}
+
+HTTPRequestHandler *Configuration::getPluginRequestHandler(const QString &key)
+{
+    if(plugins.contains(key)){
+        return plugins[key];
+    }
+
+    return NULL;
 }
 
 QString Configuration::getSettingsPath() const
@@ -105,4 +122,43 @@ bool Configuration::check() const
     }
 
     return ok;
+}
+
+void Configuration::loadPlugins(const QHash<QString, QString> &confPlugins)
+{
+    const QString pluginRoot(conf["pluginroot"].toString());
+
+    QHash<QString, QString>::const_iterator i;
+
+    for(i = confPlugins.constBegin(); i != confPlugins.constEnd(); ++i){
+        QPluginLoader loader(pluginRoot + i.value());
+
+        #ifdef QT_DEBUG
+            qDebug() << "Loading from: " << loader.fileName();
+        #endif
+
+        QObject *p = loader.instance();
+
+        IPlugin *requestHandlerFactory = qobject_cast<IPlugin *>(p);
+
+        if(!requestHandlerFactory){
+            qDebug() << "Plugin (" << i.key() << ":" << i.value() << ") not loaded: " << loader.errorString();
+            continue;
+        }
+
+        plugins.insert(i.key(),
+            requestHandlerFactory->getHTTPRequestHandler(Configuration::get(getPluginName(i.value())).toHash()));
+    }
+}
+
+QString Configuration::getPluginName(const QString &fullName) const
+{
+    QString name(fullName);
+
+    name.replace(".so", "").replace(".dll", "");
+    if(0 == name.indexOf("lib")){
+        name.replace(0, 3, "");
+    }
+
+    return name;
 }

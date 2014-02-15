@@ -111,10 +111,9 @@ void HTTPConnection::processRequestData(HTTPRequest requestData)
     connect(requestHandler, SIGNAL(endOfWriting()), this,
             SLOT(close()));
 
-    connect(requestHandler, SIGNAL(endOfWriting()), requestHandler,
-            SLOT(deleteLater()));
+    //TODO: delete the reqHandler at daemon shutdown
 
-    requestHandler->createResponse();
+    requestHandler->createResponse(requestData);
 }
 
 void HTTPConnection::onParseError(const QString &reason)

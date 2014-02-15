@@ -11,8 +11,6 @@ class Dispatcher
 public:
     Dispatcher();
     HTTPRequestHandler *getHTTPRequestHandler(const HTTPRequest &requestData) const;
-private:
-    HTTPRequestHandler *loadPlugin(const QString &plugin, const HTTPRequest &requestData) const;
 };
 
 #endif // DISPATCHER_H
