@@ -167,20 +167,59 @@ QString Configuration::getPluginName(const QString &fullName) const
 
 QString Configuration::dereference(const QString &value)
 {
-    //TODO: escaping: foo\\bar{asd}\{ - replace asd
-    //foo\\{bar} - replace bar
-    int left = value.indexOf('{');
-    int right = value.indexOf('}');
+    QString retval;
+    QString reference;
+    bool escape = false;
+    int wait_closing = false;
 
-    qDebug() << "LEFT:" << left << "RIGHT:" << right;
+    foreach(QChar c, value){
+        if(escape){
+            if(wait_closing){
+                reference += c;
+            }
+            else{
+                retval += c;
+            }
+            escape = false;
+        }
+        else if('`' == c){
+            escape = true;
+        }
+        else{
+            if('{' == c){
+                wait_closing = true;
+            }
+            else if(wait_closing && '}' == c){
+                wait_closing = false;
 
-    if(-1 == left || -1 == right){
+                qDebug() << "Looking for:" << reference;
+                if(!conf.contains(reference)){
+                    QByteArray msg;
+                    msg = reference.toLocal8Bit();
+                    syslog(LOG_WARNING, "Cannot resolve reference %s ", msg.constData());
+                }
+                else{
+                    retval += conf[reference].toString();
+                }
+
+                reference.clear();
+            }
+            else if(0 == wait_closing){
+                retval += c;
+            }
+            else{
+                reference += c;
+            }
+        }
+    }
+
+    if(wait_closing){
+        QByteArray msg;
+        msg = value.toLocal8Bit();
+        syslog(LOG_WARNING, "Cannot parse: %s - missing '}'", msg.constData());
         return value;
     }
 
-    QString ref = value.mid(left+1, right-left-1);
-    qDebug() << "Reference:" << ref;
-
-    qDebug() <<"NEW VAL:"<< value.left(left) + conf[ref].toString() + value.right(value.size()-right-1);
-    return  value.left(left) + conf[ref].toString() + value.right(value.size()-right-1);
+    qDebug() << value << "=" << retval;
+    return retval;
 }
