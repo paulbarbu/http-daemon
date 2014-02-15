@@ -117,7 +117,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    //TODO: set secondary groups
     if(0 != setuid(pw->pw_uid)){
         syslog(LOG_ERR, "Cannot set uid to %i, error: %m", pw->pw_uid);
         return 1;
