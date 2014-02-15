@@ -23,6 +23,7 @@ public:
 protected:
     void loadPlugins(const QHash<QString, QString> &confPlugins);
     QString getPluginName(const QString &fullName) const;
+    QString dereference(const QString &value);
 private:
     const QString settingsPath;
     static QHash<QString, QVariant> conf;

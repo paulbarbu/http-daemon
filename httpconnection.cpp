@@ -53,6 +53,8 @@ void HTTPConnection::write(HTTPResponse &response)
 {
     QByteArray partialResponse = response.getPartial();
 
+    qDebug() << "Writing" << partialResponse.size() << "bytes";
+
     socket.write(partialResponse);
 }
 
@@ -93,7 +95,7 @@ void HTTPConnection::processRequestData(HTTPRequest requestData)
     Dispatcher dispatcher;
 
     HTTPRequestHandler *requestHandler =
-            dispatcher.getHTTPRequestHandler(requestData);
+            dispatcher.getHTTPRequestHandler(requestData.url.path());
 
     if(NULL == requestHandler){
         HTTPResponse response;

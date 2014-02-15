@@ -19,8 +19,6 @@ SOURCES += main.cpp \
 	httpconnection.cpp \
 	httpconnectionmanager.cpp \
 	dispatcher.cpp \
-	filehttprequesthandler.cpp \
-	dirhttprequesthandler.cpp \
 	httpdaemon.cpp \
 	logging.cpp \
 	configuration.cpp
@@ -30,8 +28,6 @@ HEADERS += \
 	httpconnection.h \
 	httpconnectionmanager.h \
 	dispatcher.h \
-	filehttprequesthandler.h \
-	dirhttprequesthandler.h \
 	httpdaemon.h \
 	logging.h \
 	configuration.h

@@ -10,7 +10,7 @@ class Dispatcher
 {
 public:
     Dispatcher();
-    HTTPRequestHandler *getHTTPRequestHandler(const HTTPRequest &requestData) const;
+    HTTPRequestHandler *getHTTPRequestHandler(const QString &path) const;
 };
 
 #endif // DISPATCHER_H

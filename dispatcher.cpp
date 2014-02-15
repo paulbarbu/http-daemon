@@ -1,18 +1,15 @@
 #include <QDebug>
 #include <QFileInfo>
 #include "dispatcher.h"
-#include "filehttprequesthandler.h"
-#include "dirhttprequesthandler.h"
 #include "configuration.h"
 
 Dispatcher::Dispatcher()
 {
 }
 
-//TODO: pass this just what it needs, the URL (after File and DirHTTPRequestHandlers become plugins
-HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const HTTPRequest &requestData) const
+HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const QString &path) const
 {
-    QStringList urlParts = requestData.url.path().split("/", QString::SkipEmptyParts);
+    QStringList urlParts = path.split("/", QString::SkipEmptyParts);
     QString urlStart("");
 
     if(!urlParts.empty()){
@@ -28,18 +25,5 @@ HTTPRequestHandler* Dispatcher::getHTTPRequestHandler(const HTTPRequest &request
         }
     }
 
-    const QString docRoot(Configuration::get("documentroot").toString());
-
-    QString fullPath = docRoot + requestData.url.path();
-    QFileInfo f(fullPath);
-
-    qDebug() << requestData.method << " " << fullPath;
-
-    //TODO: move these to plugins
-    //TODO: HTTPConnection will not delete these if I make exception for the plugins - won't be a problem if they will be plugins, too
-    if(f.isDir()){
-        return new DirHTTPRequestHandler(requestData, f.absoluteFilePath());
-    }
-
-    return new FileHTTPRequestHandler(requestData, f.absoluteFilePath());
+    return Configuration::getPluginRequestHandler("static_file");
 }

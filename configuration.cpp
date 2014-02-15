@@ -9,6 +9,7 @@
 #include "logging.h"
 #include "iplugin.h"
 
+//TODO: inherit QSettings
 QHash<QString, QVariant> Configuration::conf;
 QHash<QString, HTTPRequestHandler *> Configuration::plugins;
 
@@ -48,11 +49,12 @@ bool Configuration::read()
             }
 
             QHash<QString, QVariant> t(conf[section].toHash());
-            t.insert(new_key, settings.value(key).toString());
+            t.insert(new_key, dereference(settings.value(key).toString()));
             conf[section] = t;
 
             qDebug() << section << "/" << new_key << ":" << conf[section].toHash()[new_key];
-            qDebug() <<"to be:" << key << ":" << settings.value(key).toString();
+            qDebug() <<"to be:" << key << ":" << settings.value(key).toString()
+                     << "(" << dereference(settings.value(key).toString()) << ")";
         }
         else{
             conf[key] = settings.value(key);
@@ -161,4 +163,24 @@ QString Configuration::getPluginName(const QString &fullName) const
     }
 
     return name;
+}
+
+QString Configuration::dereference(const QString &value)
+{
+    //TODO: escaping: foo\\bar{asd}\{ - replace asd
+    //foo\\{bar} - replace bar
+    int left = value.indexOf('{');
+    int right = value.indexOf('}');
+
+    qDebug() << "LEFT:" << left << "RIGHT:" << right;
+
+    if(-1 == left || -1 == right){
+        return value;
+    }
+
+    QString ref = value.mid(left+1, right-left-1);
+    qDebug() << "Reference:" << ref;
+
+    qDebug() <<"NEW VAL:"<< value.left(left) + conf[ref].toString() + value.right(value.size()-right-1);
+    return  value.left(left) + conf[ref].toString() + value.right(value.size()-right-1);
 }
