@@ -9,12 +9,19 @@
 #include "logging.h"
 #include "iplugin.h"
 
-//TODO: inherit QSettings
 QHash<QString, QVariant> Configuration::conf;
 QHash<QString, HTTPRequestHandler *> Configuration::plugins;
 
 Configuration::Configuration(const QString &iniPath) : settingsPath(iniPath)
 {
+}
+
+Configuration::~Configuration()
+{
+    QHash<QString, HTTPRequestHandler *>::const_iterator i;
+    for(i = plugins.constBegin(); i != plugins.constEnd(); ++i){
+        delete i.value();
+    }
 }
 
 QReadWriteLock lock;

@@ -115,8 +115,6 @@ void HTTPConnection::processRequestData(HTTPRequest requestData)
     connect(requestHandler, SIGNAL(endOfWriting()), this,
             SLOT(close()));
 
-    //TODO: delete the reqHandler at daemon shutdown
-
     requestHandler->createResponse(requestData);
 }
 

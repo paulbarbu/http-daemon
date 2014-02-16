@@ -14,6 +14,7 @@ class Configuration
 {
 public:
     explicit Configuration(const QString &iniPath);
+    ~Configuration();
     bool read();
     static QVariant get(const QString &key, QVariant defaultValue = QVariant());
     static QStringList getPluginKeys();
