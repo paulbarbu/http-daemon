@@ -42,6 +42,7 @@ DEFINES += CONFIG_DIR=\\\"/path/to/http-daemon/config/dir/\\\"
 CONFIG(release, debug|release){
 	DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_WARNING_OUTPUT
 	message("Release mode: No debug or warning messages from Qt")
+	QMAKE_CXXFLAGS += -O3
 }
 
 #TODO: find a way to link to a more general location, if I move on another machine I won't have to create all the build-* dirs
