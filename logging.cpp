@@ -47,7 +47,6 @@ void qtOutputToLog(QtMsgType type, const char *msg)
             break;
         case QtFatalMsg:
             syslog(LOG_ALERT, "Qt fatal: %s", msg);
-            exit(1);
             break;
         default:
             syslog(LOG_INFO, "Qt info: %s", msg);
