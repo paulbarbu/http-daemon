@@ -155,5 +155,7 @@ int main(int argc, char *argv[])
     close(STDERR_FILENO);
 #endif
 
+    qRegisterMetaType<HTTPResponse>("HTTPResponse");
+
     return a.exec();
 }
