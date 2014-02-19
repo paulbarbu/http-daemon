@@ -20,24 +20,19 @@ HTTPRequestHandler *Dispatcher::getHTTPRequestHandler(const QString &path) const
     qDebug() << "urlStart:" << urlStart;
     QPair<QString, IPlugin*> pluginInfo;
 
-
-    //TODO: store "path: <name, plugin>"
     foreach(QString key, Configuration::getPluginKeys()){
         qDebug() << "plugin_key (path):" << key;
         if(key.right(key.size()-1) == urlStart || (urlStart == "" && "/" == key)){
-            //TODO: think if this returns NULL
             pluginInfo = Configuration::getPlugin(key);
             return pluginInfo.second->getHTTPRequestHandler(Configuration::get(pluginInfo.first).toHash());
-
-            //return Configuration::getPlugin(key);
-            //HTTPRequestHandler *requestHandler = plugin->getHTTPRequestHandler(Configuration::get(getPluginName(fullName)).toHash());
         }
     }
 
-    //getPlugin returned "error"
-    if(true){
+    pluginInfo = Configuration::getPlugin("static_file");
+    QPair<QString, IPlugin*> err;
+    if(err == pluginInfo){
+        return NULL;
     }
 
-    pluginInfo = Configuration::getPlugin("static_file");
     return pluginInfo.second->getHTTPRequestHandler(Configuration::get(pluginInfo.first).toHash());
 }

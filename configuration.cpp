@@ -10,8 +10,7 @@
 #include "logging.h"
 
 QHash<QString, QVariant> Configuration::conf;
-QHash<QString, IPlugin *> Configuration::plugins;
-QHash<QString, QString> Configuration::pluginNames;
+QHash<QString, QPair<QString, IPlugin*>> Configuration::plugins;
 
 Configuration::Configuration(const QString &iniPath) : settingsPath(iniPath)
 {
@@ -19,12 +18,6 @@ Configuration::Configuration(const QString &iniPath) : settingsPath(iniPath)
 
 Configuration::~Configuration()
 {
-    /*QHash<QString, HTTPRequestHandler *>::const_iterator i;
-    for(i = plugins.constBegin(); i != plugins.constEnd(); ++i){
-        delete i.value();
-    }*/
-
-    //TODO: valgrind this
 }
 
 QReadWriteLock lock;
@@ -86,7 +79,6 @@ bool Configuration::read()
 
 QVariant Configuration::get(const QString &key, QVariant defaultValue)
 {
-    //TODO: think about read-locking this
     return conf.value(key, defaultValue);
 }
 
@@ -98,7 +90,7 @@ QStringList Configuration::getPluginKeys()
 QPair<QString, IPlugin *> Configuration::getPlugin(const QString &key)
 {
     if(plugins.contains(key)){
-        return qMakePair(getPluginName(key), plugins[key]);
+        return plugins[key];
     }
 
     return QPair<QString, IPlugin *>();
@@ -158,19 +150,13 @@ void Configuration::loadPlugins(const QHash<QString, QString> &confPlugins)
             continue;
         }
 
-        plugins.insert(i.key(), requestHandlerFactory);
-        pluginNames.insert(i.key(), i.value());
-
-        /*
-        plugins.insert(i.key(),
-            requestHandlerFactory->getHTTPRequestHandler(Configuration::get(getPluginName(i.value())).toHash()));
-            */
+        plugins.insert(i.key(), qMakePair(getPluginName(i.value()), requestHandlerFactory));
     }
 }
 
-QString Configuration::getPluginName(const QString &key)
+QString Configuration::getPluginName(const QString &fullName) const
 {
-    QString name(pluginNames[key]);
+    QString name(fullName);
 
     name.replace(".so", "").replace(".dll", "");
     if(0 == name.indexOf("lib")){

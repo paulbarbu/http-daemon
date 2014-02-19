@@ -114,7 +114,8 @@ void HTTPConnection::processRequestData(HTTPRequest requestData)
     connect(requestHandler, SIGNAL(endOfWriting()), this,
             SLOT(close()));
 
-    //TODO: don't forget to connect for deletion
+    connect(requestHandler, SIGNAL(endOfWriting()), requestHandler,
+                SLOT(deleteLater()));
 
     requestHandler->createResponse(requestData);
 }

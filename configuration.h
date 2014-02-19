@@ -22,14 +22,13 @@ public:
     QString getSettingsPath() const;
     bool check() const;
 protected:
-    static QString getPluginName(const QString &key);
+    QString getPluginName(const QString &fullName) const;
     void loadPlugins(const QHash<QString, QString> &confPlugins);
     QString dereference(const QString &value);
 private:
     const QString settingsPath;
     static QHash<QString, QVariant> conf;
-    static QHash<QString, IPlugin *> plugins;
-    static QHash<QString, QString> pluginNames;
+    static QHash<QString, QPair<QString, IPlugin*>> plugins;
 };
 
 #endif // CONFIGURATION_H
