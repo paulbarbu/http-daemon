@@ -4,13 +4,14 @@
 #include <QDebug>
 #include <QStringList>
 #include <QPluginLoader>
+#include <QPair>
 
 #include "configuration.h"
 #include "logging.h"
-#include "iplugin.h"
 
 QHash<QString, QVariant> Configuration::conf;
-QHash<QString, HTTPRequestHandler *> Configuration::plugins;
+QHash<QString, IPlugin *> Configuration::plugins;
+QHash<QString, QString> Configuration::pluginNames;
 
 Configuration::Configuration(const QString &iniPath) : settingsPath(iniPath)
 {
@@ -18,10 +19,12 @@ Configuration::Configuration(const QString &iniPath) : settingsPath(iniPath)
 
 Configuration::~Configuration()
 {
-    QHash<QString, HTTPRequestHandler *>::const_iterator i;
+    /*QHash<QString, HTTPRequestHandler *>::const_iterator i;
     for(i = plugins.constBegin(); i != plugins.constEnd(); ++i){
         delete i.value();
-    }
+    }*/
+
+    //TODO: valgrind this
 }
 
 QReadWriteLock lock;
@@ -92,13 +95,13 @@ QStringList Configuration::getPluginKeys()
     return plugins.keys();
 }
 
-HTTPRequestHandler *Configuration::getPluginRequestHandler(const QString &key)
+QPair<QString, IPlugin *> Configuration::getPlugin(const QString &key)
 {
     if(plugins.contains(key)){
-        return plugins[key];
+        return qMakePair(getPluginName(key), plugins[key]);
     }
 
-    return NULL;
+    return QPair<QString, IPlugin *>();
 }
 
 QString Configuration::getSettingsPath() const
@@ -155,14 +158,19 @@ void Configuration::loadPlugins(const QHash<QString, QString> &confPlugins)
             continue;
         }
 
+        plugins.insert(i.key(), requestHandlerFactory);
+        pluginNames.insert(i.key(), i.value());
+
+        /*
         plugins.insert(i.key(),
             requestHandlerFactory->getHTTPRequestHandler(Configuration::get(getPluginName(i.value())).toHash()));
+            */
     }
 }
 
-QString Configuration::getPluginName(const QString &fullName) const
+QString Configuration::getPluginName(const QString &key)
 {
-    QString name(fullName);
+    QString name(pluginNames[key]);
 
     name.replace(".so", "").replace(".dll", "");
     if(0 == name.indexOf("lib")){

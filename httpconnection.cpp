@@ -96,8 +96,7 @@ void HTTPConnection::processRequestData(HTTPRequest requestData)
 
     Dispatcher dispatcher;
 
-    HTTPRequestHandler *requestHandler =
-            dispatcher.getHTTPRequestHandler(requestData.url.path());
+    HTTPRequestHandler *requestHandler = dispatcher.getHTTPRequestHandler(requestData.url.path());
 
     if(NULL == requestHandler){
         HTTPResponse response;
@@ -114,6 +113,8 @@ void HTTPConnection::processRequestData(HTTPRequest requestData)
 
     connect(requestHandler, SIGNAL(endOfWriting()), this,
             SLOT(close()));
+
+    //TODO: don't forget to connect for deletion
 
     requestHandler->createResponse(requestData);
 }
