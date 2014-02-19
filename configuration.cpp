@@ -87,7 +87,7 @@ QStringList Configuration::getPluginKeys()
     return plugins.keys();
 }
 
-QPair<QString, IPlugin *> Configuration::getPlugin(const QString &key)
+QPair<QString, IPlugin *> Configuration::getPluginInfo(const QString &key)
 {
     if(plugins.contains(key)){
         return plugins[key];

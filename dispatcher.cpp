@@ -8,6 +8,7 @@
 Dispatcher::Dispatcher()
 {
 }
+
 HTTPRequestHandler *Dispatcher::getHTTPRequestHandler(const QString &path) const
 {
     QStringList urlParts = path.split("/", QString::SkipEmptyParts);
@@ -23,12 +24,12 @@ HTTPRequestHandler *Dispatcher::getHTTPRequestHandler(const QString &path) const
     foreach(QString key, Configuration::getPluginKeys()){
         qDebug() << "plugin_key (path):" << key;
         if(key.right(key.size()-1) == urlStart || (urlStart == "" && "/" == key)){
-            pluginInfo = Configuration::getPlugin(key);
+            pluginInfo = Configuration::getPluginInfo(key);
             return pluginInfo.second->getHTTPRequestHandler(Configuration::get(pluginInfo.first).toHash());
         }
     }
 
-    pluginInfo = Configuration::getPlugin("static_file");
+    pluginInfo = Configuration::getPluginInfo("static_file");
     QPair<QString, IPlugin*> err;
     if(err == pluginInfo){
         return NULL;

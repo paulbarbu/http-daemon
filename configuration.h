@@ -18,7 +18,7 @@ public:
     bool read();
     static QVariant get(const QString &key, QVariant defaultValue = QVariant());
     static QStringList getPluginKeys();
-    static QPair<QString, IPlugin *> getPlugin(const QString &key);
+    static QPair<QString, IPlugin *> getPluginInfo(const QString &key);
     QString getSettingsPath() const;
     bool check() const;
 protected:
