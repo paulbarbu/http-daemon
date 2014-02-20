@@ -30,6 +30,7 @@ public slots:
     void processRequestData(HTTPRequest requestData);
     void read();
     void write(HTTPResponse response);
+    void write(uchar *data, int size);
     void close();
 };
 

@@ -52,13 +52,21 @@ void HTTPConnection::read()
     parser << socket.readAll();
 }
 
+void HTTPConnection::write(uchar *data, int size)
+{
+    qDebug() << Q_FUNC_INFO << "Writing" << size << "bytes";
+
+    socket.write((const char*)data, size);
+}
+
 void HTTPConnection::write(HTTPResponse response)
 {
     QByteArray partialResponse = response.getPartial();
 
-    qDebug() << "Writing" << partialResponse.size() << "bytes";
+    qDebug() << Q_FUNC_INFO << "Writing" << partialResponse.size() << "bytes";
 
     socket.write(partialResponse);
+    //TODO: in case of error (-1) or if not all data has been sent queue the data
 }
 
 void HTTPConnection::processRequestData(HTTPRequest requestData)
@@ -111,6 +119,9 @@ void HTTPConnection::processRequestData(HTTPRequest requestData)
 
     connect(requestHandler, SIGNAL(responseWritten(HTTPResponse)), this,
             SLOT(write(HTTPResponse)));
+
+    connect(requestHandler, SIGNAL(rawDataWritten(uchar*, int)), this,
+            SLOT(write(uchar*, int)));
 
     connect(requestHandler, SIGNAL(endOfWriting()), this,
             SLOT(close()));
