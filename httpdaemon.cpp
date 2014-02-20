@@ -14,10 +14,5 @@ void HTTPDaemon::incomingConnection(int socketDescriptor)
     HTTPConnectionManager *httpConnectionManager =
             new HTTPConnectionManager(socketDescriptor);
 
-    connect(httpConnectionManager, SIGNAL(connectionClosed()),
-            httpConnectionManager, SLOT(deleteLater()));
-
-    httpConnectionManager->setAutoDelete(false);
-
     QThreadPool::globalInstance()->start(httpConnectionManager);
 }
