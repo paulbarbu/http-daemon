@@ -28,7 +28,7 @@ protected:
 private:
     const QString settingsPath;
     static QHash<QString, QVariant> conf;
-    static QHash<QString, QPair<QString, IPlugin*>> plugins;
+    static QHash<QString, QPair<QString, IPlugin*> > plugins;
 };
 
 #endif // CONFIGURATION_H

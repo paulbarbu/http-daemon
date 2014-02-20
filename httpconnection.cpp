@@ -4,6 +4,7 @@
 #include <QStringList>
 #include <QDir>
 #include <QThread>
+#include <QDebug>
 
 #include "httpconnection.h"
 #include "dispatcher.h"

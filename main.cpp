@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include <QtGlobal>
+#include <QDebug>
 
 #ifndef Q_OS_WIN32
     #include <unistd.h>
@@ -130,6 +131,7 @@ int main(int argc, char *argv[])
     HTTPDaemon s;
     s.setObjectName("HTTPDaemon");
 
+    //TODO: some ports (like 80) can be bound to only as root, so do this before changing users
     if(!s.listen(QHostAddress(Configuration::get("address").toString()), port)){
         QByteArray msg;
         msg = s.errorString().toLocal8Bit();

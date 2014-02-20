@@ -49,13 +49,15 @@ CONFIG(release, debug|release){
 #TODO: find a way to move the plugins to their central location without relying on qt creator
 # provide an installation script
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../build-http-daemon-components-Desktop-Debug/release/ -lhttp-daemon-components
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../build-http-daemon-components-Desktop-Release/release/ -lhttp-daemon-components
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../build-http-daemon-components-Desktop-Debug/debug/ -lhttp-daemon-components
-else:unix: LIBS += -L$$PWD/../build-http-daemon-components-Desktop-Debug/ -lhttp-daemon-components
+else:unix:CONFIG(debug, debug|release): LIBS += -L$$PWD/../build-http-daemon-components-Desktop-Debug/ -lhttp-daemon-components
+else:unix:CONFIG(release, debug|release): LIBS += -L$$PWD/../build-http-daemon-components-Desktop-Release/ -lhttp-daemon-components
 
 INCLUDEPATH += $$PWD/../http-daemon-components
 DEPENDPATH += $$PWD/../http-daemon-components
 
-win32:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../build-http-daemon-components-Desktop-Debug/release/libhttp-daemon-components.a
+win32:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../build-http-daemon-components-Desktop-Release/release/libhttp-daemon-components.a
 else:win32:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../build-http-daemon-components-Desktop-Debug/debug/libhttp-daemon-components.a
-else:unix: PRE_TARGETDEPS += $$PWD/../build-http-daemon-components-Desktop-Debug/libhttp-daemon-components.a
+else:unix:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../build-http-daemon-components-Desktop-Release/libhttp-daemon-components.a
+else:unix:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../build-http-daemon-components-Desktop-Debug/libhttp-daemon-components.a

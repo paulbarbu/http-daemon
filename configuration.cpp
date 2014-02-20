@@ -10,7 +10,7 @@
 #include "logging.h"
 
 QHash<QString, QVariant> Configuration::conf;
-QHash<QString, QPair<QString, IPlugin*>> Configuration::plugins;
+QHash<QString, QPair<QString, IPlugin*> > Configuration::plugins;
 
 Configuration::Configuration(const QString &iniPath) : settingsPath(iniPath)
 {
