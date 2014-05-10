@@ -5,6 +5,7 @@
 #include <QString>
 #include <QStringList>
 #include <QVariant>
+#include <QSettings>
 
 #include "iplugin.h"
 
@@ -24,7 +25,7 @@ public:
 protected:
     QString getPluginName(const QString &fullName) const;
     void loadPlugins(const QHash<QString, QString> &confPlugins);
-    QString dereference(const QString &value);
+    QString dereference(const QString &value, const QSettings &settings);
 private:
     const QString settingsPath;
     static QHash<QString, QVariant> conf;

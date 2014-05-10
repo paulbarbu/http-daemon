@@ -52,12 +52,12 @@ bool Configuration::read()
             }
 
             QHash<QString, QVariant> t(conf[section].toHash());
-            t.insert(new_key, dereference(settings.value(key).toString()));
+            t.insert(new_key, dereference(settings.value(key).toString(), settings));
             conf[section] = t;
 
             qDebug() << section << "/" << new_key << ":" << conf[section].toHash()[new_key];
             qDebug() <<"to be:" << key << ":" << settings.value(key).toString()
-                     << "(" << dereference(settings.value(key).toString()) << ")";
+                     << "(" << dereference(settings.value(key).toString(), settings) << ")";
         }
         else{
             conf[key] = settings.value(key);
@@ -166,7 +166,7 @@ QString Configuration::getPluginName(const QString &fullName) const
     return name;
 }
 
-QString Configuration::dereference(const QString &value)
+QString Configuration::dereference(const QString &value, const QSettings &settings)
 {
     QString retval;
     QString reference;
@@ -194,13 +194,13 @@ QString Configuration::dereference(const QString &value)
                 wait_closing = false;
 
                 qDebug() << "Looking for:" << reference;
-                if(!conf.contains(reference)){
+                if(!settings.contains(reference)){
                     QByteArray msg;
                     msg = reference.toLocal8Bit();
                     syslog(LOG_WARNING, "Cannot resolve reference %s ", msg.constData());
                 }
                 else{
-                    retval += conf[reference].toString();
+                    retval += settings.value(reference).toString();
                 }
 
                 reference.clear();
