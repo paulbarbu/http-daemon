@@ -61,6 +61,11 @@ void HTTPConnection::write(uchar *data, int size)
 
 void HTTPConnection::write(HTTPResponse response)
 {
+    //TODO: for status codes that doesn't make sense, don't set the body
+    if("200" != response.getStatusCode() && response.getBody().isEmpty()){
+        response.setBody(response.getStatusCode() + " " + response.getReasonPhrase());
+    }
+
     QByteArray partialResponse = response.getPartial();
 
     qDebug() << Q_FUNC_INFO << "Writing" << partialResponse.size() << "bytes";
