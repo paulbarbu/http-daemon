@@ -117,6 +117,9 @@ void HTTPConnection::processRequestData(HTTPRequest requestData)
         return;
     }
 
+    connect(requestHandler, SIGNAL(redirect(HTTPRequest)), this,
+            SLOT(processRequestData(HTTPRequest)));
+
     connect(requestHandler, SIGNAL(responseWritten(HTTPResponse)), this,
             SLOT(write(HTTPResponse)));
 
